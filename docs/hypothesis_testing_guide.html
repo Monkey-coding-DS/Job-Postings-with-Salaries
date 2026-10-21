@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Проверка гипотез о зарплатах — методичка</title>
+<style>
+  @page {
+    size: A4;
+    margin: 17mm 15mm 16mm 15mm;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0;
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    font-size: 10.2pt;
+    line-height: 1.52;
+    color: #1c2430;
+    background: #fff;
+  }
+  h1, h2, h3, h4, .sans { font-family: "Segoe UI", Tahoma, Arial, sans-serif; }
+  h1 {
+    font-size: 19pt;
+    color: #16324f;
+    margin: 0 0 8pt;
+    padding-bottom: 5pt;
+    border-bottom: 3px solid #2f6f9f;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 13.5pt;
+    color: #1f4e79;
+    margin: 16pt 0 6pt;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11.4pt;
+    color: #16324f;
+    margin: 12pt 0 4pt;
+    page-break-after: avoid;
+  }
+  h4 { font-size: 10.2pt; margin: 9pt 0 3pt; color: #2f6f9f; page-break-after: avoid; }
+  p { margin: 0 0 6pt; text-align: justify; hyphens: auto; }
+  ul, ol { margin: 3pt 0 7pt; padding-left: 17pt; }
+  li { margin: 0 0 2.5pt; }
+  a { color: #1f5f8b; text-decoration: none; }
+  code, .mono {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 8.9pt;
+    background: #f2f5f8;
+    border: 1px solid #e1e7ed;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+  pre {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 8.2pt;
+    line-height: 1.42;
+    background: #f6f8fa;
+    border-left: 3px solid #9db8cc;
+    padding: 7pt 9pt;
+    margin: 6pt 0 9pt;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 8.6pt;
+    line-height: 1.35;
+    margin: 5pt 0 10pt;
+    page-break-inside: auto;
+  }
+  tr { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+  th {
+    background: #e7eef4;
+    color: #16324f;
+    text-align: left;
+    font-weight: 600;
+    padding: 4pt 5pt;
+    border-bottom: 1.5px solid #9db8cc;
+  }
+  td { padding: 3.5pt 5pt; border-bottom: 0.6px solid #dde4ea; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .small { font-size: 8.8pt; }
+  .muted { color: #5d6b7a; }
+  .center { text-align: center; }
+
+  /* callouts */
+  .box {
+    border-radius: 4px;
+    padding: 7pt 10pt;
+    margin: 7pt 0 9pt;
+    page-break-inside: avoid;
+    font-size: 9.6pt;
+  }
+  .box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
+  .box .label {
+    display: inline-block;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 7.6pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 2pt;
+  }
+  .theory { background: #eef5fb; border-left: 4px solid #2f6f9f; }
+  .theory .label { color: #2f6f9f; }
+  .why { background: #eef7f1; border-left: 4px solid #3f7d5a; }
+  .why .label { color: #3f7d5a; }
+  .warn { background: #fdf3e8; border-left: 4px solid #c26a2e; }
+  .warn .label { color: #b05a1f; }
+  .res { background: #f4f4f2; border-left: 4px solid #8c8c8c; }
+  .res .label { color: #5f5f5f; }
+
+  /* cover */
+  .cover {
+    height: 257mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    page-break-after: always;
+    padding-top: 10mm;
+  }
+  .cover .kicker {
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 8.5pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #2f6f9f;
+    border-bottom: 1px solid #c9d8e4;
+    padding-bottom: 8pt;
+  }
+  .cover h1 {
+    font-size: 32pt;
+    line-height: 1.14;
+    border: 0;
+    margin: 0;
+    color: #16324f;
+  }
+  .cover .sub {
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 13pt;
+    color: #44556a;
+    line-height: 1.45;
+    margin-top: 10pt;
+  }
+  .cover .rule { width: 42mm; height: 4px; background: #c26a2e; margin: 14pt 0; }
+  .cover .facts {
+    display: flex;
+    gap: 6mm;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 9pt;
+    color: #44556a;
+  }
+  .cover .facts div { flex: 1; border-top: 2px solid #dbe4ec; padding-top: 6pt; }
+  .cover .facts b { display: block; font-size: 16pt; color: #16324f; line-height: 1.2; }
+  .cover .foot { font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 8.5pt; color: #6b7a8a; border-top: 1px solid #dbe4ec; padding-top: 6pt; }
+
+  /* toc */
+  .toc { page-break-after: always; }
+  .toc ol { font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 10pt; list-style: none; padding-left: 0; }
+  .toc > ol > li { margin: 5pt 0 2pt; font-weight: 600; color: #16324f; }
+  .toc ol ol { padding-left: 12pt; font-size: 9.2pt; font-weight: 400; color: #33414f; }
+  .toc ol ol li { margin: 1pt 0; }
+  .toc .pg { float: right; color: #8b98a6; font-weight: 400; }
+
+  .part { page-break-before: auto; padding-top: 16pt; }
+  .partbreak { page-break-before: always; padding-top: 0; }
+  .lead {
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 10.6pt;
+    color: #44556a;
+    line-height: 1.55;
+    margin-bottom: 10pt;
+  }
+
+  /* hypothesis cards */
+  .card {
+    border: 1px solid #d8e1e9;
+    border-radius: 5px;
+    padding: 9pt 11pt 7pt;
+    margin: 9pt 0 11pt;
+    page-break-inside: auto;
+    background: #fff;
+  }
+  .card h3 {
+    page-break-after: avoid;
+    margin: 0 0 5pt;
+    font-size: 11.2pt;
+    color: #16324f;
+  }
+  .card .num {
+    display: inline-block;
+    background: #16324f;
+    color: #fff;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 8.2pt;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 1pt 5pt;
+    margin-right: 5pt;
+    vertical-align: 2pt;
+  }
+  .card dl { margin: 0; }
+  .card dt {
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 7.8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #2f6f9f;
+    page-break-after: avoid;
+    margin: 5pt 0 1pt;
+  }
+  .card dd { margin: 0; text-align: justify; }
+  .card .verdict {
+    display: inline-block;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 8pt;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 1pt 7pt;
+    margin-top: 5pt;
+  }
+  .v-yes { background: #e3f0e7; color: #2f6547; border: 1px solid #b8d6c3; }
+  .v-part { background: #fdf0e2; color: #9a5219; border: 1px solid #efcfae; }
+  .v-no { background: #f7e6e6; color: #923131; border: 1px solid #e2bcbc; }
+
+  .kpi-row { display: flex; gap: 5mm; margin: 8pt 0 10pt; }
+  .kpi {
+    flex: 1;
+    border: 1px solid #d8e1e9;
+    border-top: 3px solid #2f6f9f;
+    border-radius: 4px;
+    padding: 6pt 7pt;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 8.4pt;
+    color: #44556a;
+    line-height: 1.35;
+  }
+  .kpi b { display: block; font-size: 14pt; color: #16324f; line-height: 1.2; margin-bottom: 2pt; }
+
+  .flag { font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 8.4pt; }
+  .footer-note {
+    margin-top: 12pt;
+    border-top: 1px solid #dbe4ec;
+    padding-top: 5pt;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 7.8pt;
+    color: #7a8795;
+  }
+  .nowrap { white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<div class="cover">
+  <div>
+    <div class="kicker">Методичка к исследовательскому ноутбуку</div>
+    <div style="height:34mm"></div>
+    <h1>Проверка гипотез<br>о зарплатах</h1>
+    <div class="rule"></div>
+    <div class="sub">
+      Как устроен <span class="mono">notebooks/hypothesis_testing.ipynb</span>,<br>
+      зачем нужен каждый шаг и как читать статистику,<br>
+      если вы только начинаете
+    </div>
+  </div>
+
+  <div>
+    <div class="facts">
+      <div><b>9 173</b>вакансии с указанной зарплатой</div>
+      <div><b>21</b>гипотеза: от таргета до дат</div>
+      <div><b>5-fold</b>единая кросс-валидация</div>
+      <div><b>14 / 6 / 1</b>подтверждена / частично / нет</div>
+    </div>
+    <div style="height:8mm"></div>
+    <div class="foot">
+      Учебные материалы по проекту «Job Postings with Salaries» · 2026<br>
+      Ноутбук: Python 3.13, pandas, scipy, scikit-learn, statsmodels, matplotlib, seaborn
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOC ================= -->
+<div class="toc">
+  <h1 style="border-bottom-color:#c26a2e">Содержание</h1>
+  <p class="lead">Методичка идёт от общего к частному: сначала — что это за ноутбук и на каких данных он работает, затем — минимальная теория, потом — разбор кода и всех 21 гипотез, и в конце — чек-листы, ошибки и словарь.</p>
+
+  <ol>
+    <li><a href="#s1">1. Что это за ноутбук и как он устроен</a><span class="pg">3</span>
+      <ol>
+        <li><a href="#s1-1">1.1. Задача и главный вопрос</a></li>
+        <li><a href="#s1-2">1.2. Логика исследования: гипотеза → проверка → вывод</a></li>
+        <li><a href="#s1-3">1.3. Три уровня чтения ноутбука</a></li>
+      </ol>
+    </li>
+    <li><a href="#s2">2. Данные</a><span class="pg">5</span>
+      <ol>
+        <li><a href="#s2-1">2.1. Что лежит в таблице</a></li>
+        <li><a href="#s2-2">2.2. Целевая переменная и её особенности</a></li>
+        <li><a href="#s2-3">2.3. Смещения и ограничения данных</a></li>
+      </ol>
+    </li>
+    <li><a href="#s3">3. Как запустить ноутбук</a><span class="pg">6</span></li>
+    <li><a href="#s4">4. Минимум теории, без которого не прочитать выводы</a><span class="pg">8</span>
+      <ol>
+        <li><a href="#s4-1">4.1. Выборка, гипотезы и p-value</a></li>
+        <li><a href="#s4-2">4.2. Какие тесты здесь используются и почему</a></li>
+        <li><a href="#s4-3">4.3. Размер эффекта: значимо ≠ важно</a></li>
+        <li><a href="#s4-4">4.4. Множественные проверки</a></li>
+        <li><a href="#s4-5">4.5. Кросс-валидация и метрики</a></li>
+        <li><a href="#s4-6">4.6. Утечка данных (leakage)</a></li>
+        <li><a href="#s4-7">4.7. Наблюдательные данные и причинность</a></li>
+        <li><a href="#s4-8">4.8. Пропуски и выбросы</a></li>
+      </ol>
+    </li>
+    <li><a href="#s5">5. Подготовка данных: что делает каждая ячейка</a><span class="pg">13</span></li>
+    <li><a href="#s6">6. Вспомогательные функции: «двигатель» ноутбука</a><span class="pg">16</span></li>
+    <li><a href="#s7">7. Разбор 21 гипотезы</a><span class="pg">20</span>
+      <ol>
+        <li><a href="#s7-1">7.1. Таргет: гипотезы 1–3</a></li>
+        <li><a href="#s7-2">7.2. Роль и уровень: гипотезы 4–7</a></li>
+        <li><a href="#s7-3">7.3. География и формат: гипотезы 8–11</a></li>
+        <li><a href="#s7-4">7.4. Компания и платформа: гипотезы 12–14</a></li>
+        <li><a href="#s7-5">7.5. Занятость и период: гипотезы 15–17</a></li>
+        <li><a href="#s7-6">7.6. Текст и пропуски: гипотезы 18–19</a></li>
+        <li><a href="#s7-7">7.7. Служебные признаки: гипотезы 20–21</a></li>
+      </ol>
+    </li>
+    <li><a href="#s8">8. Итоги: что действительно работает</a><span class="pg">31</span></li>
+    <li><a href="#s9">9. Как применять это на практике</a><span class="pg">33</span>
+      <ol>
+        <li><a href="#s9-1">9.1. Алгоритм проверки своей гипотезы</a></li>
+        <li><a href="#s9-2">9.2. Чек-лист перед публикацией вывода</a></li>
+        <li><a href="#s9-3">9.3. Десять типичных ошибок</a></li>
+        <li><a href="#s9-4">9.4. Вопросы и ответы</a></li>
+      </ol>
+    </li>
+    <li><a href="#s10">10. Словарь терминов</a><span class="pg">35</span></li>
+    <li><a href="#sa">Приложение. Формулы и шпаргалка по коду</a><span class="pg">37</span></li>
+  </ol>
+
+</div>
+
+<!-- ================= 1 ================= -->
+<div class="part">
+<h1 id="s1">1. Что это за ноутбук и как он устроен</h1>
+
+<p class="lead">Это исследовательский ноутбук, а не производственный пайплайн. Его задача — не получить максимально точную модель, а аккуратно ответить на 21 вопрос о зарплатах и понять, какие признаки вообще стоит тащить в модель.</p>
+
+<h2 id="s1-1">1.1. Задача и главный вопрос</h2>
+
+<p>Есть таблица вакансий с зарплатными вилками. Хочется понять, от чего зависит зарплата: от уровня позиции, страны, формата работы, компании, платформы, типа занятости, текста описания. И одновременно — какие из этих признаков реально полезны для прогноза, а какие создают лишь иллюзию знания.</p>
+
+<p>Ноутбук отвечает на два разных вопроса, и их важно не путать:</p>
+
+<table>
+  <thead><tr><th style="width:31%">Вопрос</th><th style="width:34%">Инструмент</th><th>Что считается ответом</th></tr></thead>
+  <tbody>
+    <tr><td>Есть ли различие между группами?</td><td>Статистические тесты: Kruskal–Wallis, Mann–Whitney, χ², корреляции</td><td>p-value и размер эффекта</td></tr>
+    <tr><td>Помогает ли признак прогнозу?</td><td>Кросс-валидация: модель с признаком против модели без него</td><td>Прирост MAE в долларах</td></tr>
+  </tbody>
+</table>
+
+<p>Именно поэтому почти каждая гипотеза проверяется дважды: сначала тестом «различаются ли группы», затем сравнением моделей «стало ли лучше». Первое отвечает на вопрос «есть ли сигнал», второе — «есть ли польза». Они не всегда совпадают: различие может быть статистически значимым, но настолько малым, что модель от него не выигрывает.</p>
+
+<div class="box why">
+  <span class="label">Почему так</span>
+  <p>Если проверять только модель, можно пропустить важный описательный факт: признак вроде бы не улучшает MAE, потому что дублирует другой. Если проверять только тесты, можно утащить в модель десяток значимых, но бесполезных признаков. Двойная проверка закрывает обе слепые зоны.</p>
+</div>
+
+<h2 id="s1-2">1.2. Логика исследования: гипотеза → проверка → вывод</h2>
+
+<p>Каждая из 21 гипотез оформлена по одной схеме. Понимание этой схемы важнее, чем знание конкретных чисел.</p>
+
+<table>
+  <thead><tr><th style="width:22%">Шаг</th><th>Что происходит в ноутбуке</th><th style="width:36%">Пример (гипотеза 9)</th></tr></thead>
+  <tbody>
+    <tr><td><b>1. Вопрос</b></td><td>Формулируется проверяемое утверждение, а не «интересно, как оно».</td><td>«Remote платят больше, чем onsite».</td></tr>
+    <tr><td><b>2. Данные</b></td><td>Берётся подвыборка, где признак заполнен; задаётся минимальный размер группы.</td><td>Вакансии с известным <span class="mono">workplace_type</span>, группы от 20 наблюдений.</td></tr>
+    <tr><td><b>3. Проверка</b></td><td>Тест на различия + модель с признаком и без + контроль на конфаундеры.</td><td>Kruskal–Wallis, затем Mann–Whitney по парам, затем OLS с контролем на ATS, роль, занятость, период.</td></tr>
+    <tr><td><b>4. Эффект</b></td><td>Считается не только p, но и величина: ε², разница медиан, проценты, прирост MAE.</td><td>Медианы 130k / 117,6k / 77k; премия remote +45 % → +5,9 % после контроля.</td></tr>
+    <tr><td><b>5. Вывод</b></td><td>Формулируется с оговоркой: подтверждена, частично, не подтверждена.</td><td>«Частично подтверждена».</td></tr>
+  </tbody>
+</table>
+
+<p>В конце ноутбук собирает все выводы в таблицу <span class="mono">SUMMARY</span> и печатает распределение вердиктов. Это не формальность: сводка помогает увидеть, что большая часть гипотез подтвердилась, но практическая ценность у них разная.</p>
+
+<h3>Карта ноутбука</h3>
+<table>
+  <thead><tr><th style="width:26%">Блок</th><th style="width:40%">Что внутри</th><th>Зачем</th></tr></thead>
+  <tbody>
+    <tr><td>0. Подготовка</td><td>Загрузка, нормализация периода и валюты, таргет, флаги, эвристики</td><td>Сделать данные сопоставимыми и создать признаки</td></tr>
+    <tr><td>Вспомогательные функции</td><td>Тесты, метрики, кросс-валидация, target encoding, журнал выводов</td><td>Зафиксировать единую методику для всех гипотез</td></tr>
+    <tr><td>1. Таргет</td><td>Гипотезы 1–3: логарифм, середина вилки, ширина</td><td>Выбрать, что именно предсказывать</td></tr>
+    <tr><td>2. Роль и уровень</td><td>Гипотезы 4–7: seniority, title, семейство, department</td><td>Понять, что известно о самой позиции</td></tr>
+    <tr><td>3. География и формат</td><td>Гипотезы 8–11: страна, remote, штат, пропуск страны</td><td>Отделить рынок от состава выборки</td></tr>
+    <tr><td>4. Компания и платформа</td><td>Гипотезы 12–14: ATS, компания, источник зарплаты</td><td>Найти прокси типа компании и проверить артефакты</td></tr>
+    <tr><td>5. Занятость и период</td><td>Гипотезы 15–17: тип занятости, исходный период, ошибки</td><td>Учесть формат оплаты и качество данных</td></tr>
+    <tr><td>6. Текст и пропуски</td><td>Гипотезы 18–19: description, индикаторы пропусков</td><td>Проверить самый сильный и самый обманчивый сигнал</td></tr>
+    <tr><td>7. Служебные признаки</td><td>Гипотезы 20–21: min → max, даты</td><td>Отделить утечку от полезного признака</td></tr>
+    <tr><td>8–9. Итоги</td><td>Сводная таблица, рекомендации, ограничения</td><td>Собрать результат и следующие шаги</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s1-3">1.3. Три уровня чтения ноутбука</h2>
+
+<p><b>Уровень «что происходит».</b> Читайте только markdown-ячейки с выводами. Их 21 плюс введение и итог. Этого достаточно, чтобы понять результаты.</p>
+
+<p><b>Уровень «как посчитано».</b> Смотрите код после каждого вывода: какие данные отфильтрованы, какой тест вызван, какие метрики сравниваются. Обращайте внимание на <span class="mono">min_n</span>, <span class="mono">dropna</span> и на то, на какой подвыборке считается метрика.</p>
+
+<p><b>Уровень «почему так».</b> Сравнивайте альтернативы: почему логарифм, а не исходная шкала; почему Kruskal–Wallis, а не t-тест; почему target encoding, а не one-hot; почему прирост MAE, а не R². Этому посвящены разделы 4–6 и врезки «Почему так» в разделе 7.</p>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Ноутбук нельзя читать как книгу «сверху вниз, пропуская код»: почти все вычисления опираются на объекты, созданные выше. Например, <span class="mono">BASE_PRED</span> считается один раз после подготовки данных, а потом используется в половине гипотез как точка отсчёта. Если запустить ячейку 13 в свежем ядре, будет ошибка.</p>
+</div>
+
+<div class="box theory">
+  <span class="label">Как читать методичку</span>
+  <p>Везде, где это полезно, текст разбит на четыре типа врезок. <b>Теория</b> — что это за понятие. <b>Почему так</b> — почему автор ноутбука выбрал именно этот приём. <b>Осторожно</b> — где легко ошибиться. <b>Результат</b> — что получилось на этих данных. Если вы спешите, читайте разделы 7–9 и врезки «Осторожно».</p>
+</div>
+</div>
+
+<!-- ================= 2 ================= -->
+<div class="part">
+<h1 id="s2">2. Данные</h1>
+
+<p class="lead">Все выводы ноутбука верны ровно настолько, насколько хороши данные. Поэтому начинать надо не с тестов, а с понимания таблицы и её ограничений.</p>
+
+<h2 id="s2-1">2.1. Что лежит в таблице</h2>
+
+<p>Файл <span class="mono">data/raw/job_postings_with_salaries.csv</span> — около 60 МБ; в анализе — 9 173 вакансии (строки без границ вилки удаляются). Одна строка — одна вакансия. Основные поля:</p>
+
+<table>
+  <thead><tr><th style="width:22%">Поле</th><th style="width:14%">Тип</th><th>Смысл и типичные значения</th></tr></thead>
+  <tbody>
+    <tr><td><span class="mono">title</span></td><td>текст</td><td>Название вакансии: «Senior Data Engineer», «Registered Nurse».</td></tr>
+    <tr><td><span class="mono">description</span></td><td>текст</td><td>Полное описание вакансии; часто содержит обязанности, стек и иногда саму зарплату.</td></tr>
+    <tr><td><span class="mono">salary_min</span>, <span class="mono">salary_max</span></td><td>число</td><td>Границы вилки в исходной валюте и исходном периоде.</td></tr>
+    <tr><td><span class="mono">salary_period</span></td><td>категория</td><td><span class="mono">year</span>, <span class="mono">month</span>, <span class="mono">week</span>, <span class="mono">day</span>, <span class="mono">hour</span>.</td></tr>
+    <tr><td><span class="mono">salary_currency</span></td><td>категория</td><td>USD, EUR, GBP, CAD, PLN и другие.</td></tr>
+    <tr><td><span class="mono">salary_source</span></td><td>категория</td><td><span class="mono">ats</span> — сумма взята из структурированного поля платформы; <span class="mono">description</span> — вытащена из текста.</td></tr>
+    <tr><td><span class="mono">ats</span></td><td>категория</td><td>Платформа, через которую опубликована вакансия: greenhouse, workday, ashby, recruitee и др.</td></tr>
+    <tr><td><span class="mono">company</span>, <span class="mono">company_id</span></td><td>категория</td><td>Название и внутренний идентификатор компании.</td></tr>
+    <tr><td><span class="mono">country_code</span>, <span class="mono">location</span>, <span class="mono">region</span>, <span class="mono">city</span></td><td>категория</td><td>География; заполнены не полностью.</td></tr>
+    <tr><td><span class="mono">seniority</span></td><td>категория</td><td><span class="mono">internship</span>, <span class="mono">entry</span>, <span class="mono">mid</span>, <span class="mono">senior</span>, <span class="mono">executive</span>; заполнено около 7 %.</td></tr>
+    <tr><td><span class="mono">employment_type</span></td><td>категория</td><td>full-time, part-time, contract, temporary.</td></tr>
+    <tr><td><span class="mono">workplace_type</span></td><td>категория</td><td>remote, hybrid, onsite.</td></tr>
+    <tr><td><span class="mono">department</span></td><td>категория</td><td>Подразделение: Engineering, Sales, Retail…; заполнено около 59 %.</td></tr>
+    <tr><td><span class="mono">posted_at</span>, <span class="mono">first_seen_at</span></td><td>дата</td><td>Дата публикации и дата, когда вакансию впервые увидел сборщик.</td></tr>
+  </tbody>
+</table>
+
+<div class="box theory">
+  <span class="label">Теория</span>
+  <p><b>Категориальный признак</b> — это признак, значения которого являются метками, а не числами: страна, платформа, тип занятости. Его нельзя просто подставить в формулу как число: код «US = 1, FR = 2» создаст ложный порядок. Поэтому категории либо кодируют one-hot, либо кодируют порядковым номером и говорят модели, что это категория (так делает HistGradientBoosting), либо заменяют средним таргетом (target encoding).</p>
+</div>
+
+<h2 id="s2-2">2.2. Целевая переменная и её особенности</h2>
+
+<p>Целевая переменная — <b>середина вилки</b> <span class="mono">salary_mid = (salary_min_usd + salary_max_usd) / 2</span>, приведённая к долларам в год. Слово «приведённая» здесь ключевое: исходные суммы могут быть почасовыми, недельными или в евро, и сравнивать их напрямую нельзя.</p>
+
+<p>Распределение зарплат сильно скошено вправо: большинство вакансий — 50–150 тысяч, но есть хвост до сотен тысяч. Среднее в таком распределении уезжает за «типичным» значением, поэтому в описательной статистике используется медиана, а в модели — логарифм.</p>
+
+<div class="box why">
+  <span class="label">Почему так</span>
+  <p>Логарифм превращает мультипликативные различия в аддитивные: «зарплата выросла на 10 %» становится «прибавилось 0,095 в лог-шкале» независимо от уровня зарплаты. Для модели это удобнее: ошибка в 10 тысяч на зарплате 50k и на зарплате 200k — совершенно разные вещи, а в лог-шкале они сопоставимы.</p>
+</div>
+
+<h2 id="s2-3">2.3. Смещения и ограничения данных</h2>
+
+<ul>
+  <li><b>Только вакансии с указанной зарплатой.</b> Компании, которые не раскрывают вилку, в данных отсутствуют. Это не случайная выборка рынка: скорее всего, в ней перепредставлены технологичные компании и платформы, где раскрытие обязательно или принято.</li>
+  <li><b>Одна неделя наблюдения</b> (5–12 октября 2026). Сезонность, тренды и «рынок до/после» проверить нельзя — это прямо признано в гипотезе 21.</li>
+  <li><b>Фиксированные курсы валют.</b> Все суммы пересчитаны по одному снимку курсов; валютные колебания не учитываются.</li>
+  <li><b>Стандартные допущения пересчёта:</b> 2 080 часов в год, 260 рабочих дней, 52 недели, 12 месяцев. Для частичных ставок это может искажать годовую сумму.</li>
+  <li><b>Пропуски не случайны:</b> <span class="mono">seniority</span> заполнен у 7 %, <span class="mono">department</span> — у 59 %. Пропуск связан с платформой и форматом работы, то есть является сигналом (гипотеза 11 и 19).</li>
+  <li><b>Эвристики.</b> Семейство профессии и штат извлечены регулярными выражениями, а не размечены вручную. Это воспроизводимо, но содержит ошибки.</li>
+</ul>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Из этих данных нельзя сделать вывод «remote повышает зарплату на 6 %». Можно лишь сказать: «среди вакансий с указанной зарплатой remote-вакансии в среднем на 6 % дороже при прочих наблюдаемых характеристиках». Причина может быть в том, что remote-позиции чаще открывают компании определённого типа — и это не наблюдаемая характеристика.</p>
+</div>
+</div>
+
+<!-- ================= 3 ================= -->
+<div class="part">
+<h1 id="s3">3. Как запустить ноутбук</h1>
+
+<p class="lead">Ноутбук рассчитан на локальный запуск из корня проекта. Ниже — минимальный путь, который работает на Windows, macOS и Linux.</p>
+
+<h3>Шаг 1. Виртуальное окружение</h3>
+<pre><code>python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS / Linux
+source venv/bin/activate
+
+pip install pandas numpy scipy scikit-learn statsmodels matplotlib seaborn jupyter</code></pre>
+
+<h3>Шаг 2. Данные</h3>
+<p>Файл должен лежать по пути <span class="mono">data/raw/job_postings_with_salaries.csv</span>. Путь не задаётся вручную: функция <span class="mono">load_data()</span> в <span class="mono">src/utils.py</span> вычисляет корень проекта от расположения самого файла.</p>
+
+<pre><code># src/utils.py
+def load_data():
+    root = Path(__file__).resolve().parent.parent
+    path = root / "data" / "raw" / "job_postings_with_salaries.csv"
+    return pd.read_csv(path)</code></pre>
+
+<h3>Шаг 3. Запуск</h3>
+<pre><code>jupyter notebook
+# или
+jupyter lab</code></pre>
+<p>Откройте <span class="mono">notebooks/hypothesis_testing.ipynb</span> и выполните <b>Kernel → Restart &amp; Run All</b>. Именно «Run All», а не отдельные ячейки: ноутбук хранит состояние в объектах между ячейками.</p>
+
+<h3>Шаг 4. Сколько ждать</h3>
+<p>Основное время уходит на кросс-валидацию и текстовые модели (TF-IDF + Ridge). На ноутбуке среднего класса полный прогон занимает несколько минут; если запускать только разделы 1–7, будет быстрее. Графики строятся по ходу выполнения и вставляются в вывод ячеек.</p>
+
+<div class="box why">
+  <span class="label">Почему так</span>
+  <p>В начале ноутбука есть строка <span class="mono">PROJECT_ROOT = Path.cwd().parent if Path.cwd().name == "notebooks" else Path.cwd()</span>. Она нужна, чтобы импорт <span class="mono">from src.utils import load_data</span> работал и при запуске из папки <span class="mono">notebooks</span>, и из корня проекта. Это маленькая, но частая причина ошибки <span class="mono">ModuleNotFoundError</span>.</p>
+</div>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>В ноутбуке отключены предупреждения: <span class="mono">warnings.filterwarnings("ignore")</span>. Это удобно для читаемости вывода, но опасно при отладке: вы можете не заметить предупреждение о делении на ноль, пропущенных значениях или устаревшем параметре. Если что-то считается странно, первым делом уберите эту строку.</p>
+</div>
+
+<h3>Что должно появиться в выводе</h3>
+<ul>
+  <li>Строка о числе исходных и оставшихся наблюдений, медиане и скошенности.</li>
+  <li>Словарь метрик базовой модели: MAE, RMSLE, R².</li>
+  <li>21 блок с таблицами, графиками и вердиктом.</li>
+  <li>Сводная таблица и распределение выводов в конце.</li>
+</ul>
+
+<p>Если вывод пустой или обрывается — проверьте, что ядро не упало на ячейке с графиком, и что установлены все библиотеки. Ноутбук не требует GPU и не обращается к сети.</p>
+</div>
+
+
+<!-- ================= 4 ================= -->
+<div class="part partbreak">
+<h1 id="s4">4. Минимум теории, без которого не прочитать выводы</h1>
+
+<p class="lead">Этот раздел — не учебник статистики. Здесь собрано ровно то, что нужно, чтобы понимать фразы «p = 0,015», «ε² = 0,20» и «прирост MAE 2,2k», и не делать поспешных выводов.</p>
+
+<h2 id="s4-1">4.1. Выборка, гипотезы и p-value</h2>
+
+<p>У нас есть <b>выборка</b> — 9 173 вакансии. Нас интересует <b>генеральная совокупность</b> — рынок вакансий с раскрытой зарплатой. Статистический тест отвечает на вопрос: если бы в совокупности различий не было, насколько вероятно было бы увидеть такое различие в выборке?</p>
+
+<p>Формально проверяют две гипотезы:</p>
+<ul>
+  <li><b>H₀ (нулевая)</b> — «различий нет»: медианы зарплат на всех уровнях seniority одинаковы.</li>
+  <li><b>H₁ (альтернативная)</b> — «различия есть»: хотя бы один уровень отличается.</li>
+</ul>
+
+<p><b>p-value</b> — вероятность получить наблюдаемое (или более экстремальное) различие <i>при условии, что H₀ верна</i>. Это не вероятность того, что H₀ верна, и не вероятность «случайности результата». Маленькое p означает: данные плохо совместимы с предположением «различий нет».</p>
+
+<table>
+  <thead><tr><th style="width:20%">Решение \ реальность</th><th>H₀ верна</th><th>H₀ неверна</th></tr></thead>
+  <tbody>
+    <tr><td><b>Отвергли H₀</b></td><td>Ошибка I рода (ложноположительный результат), вероятность α</td><td>Верно</td></tr>
+    <tr><td><b>Не отвергли H₀</b></td><td>Верно</td><td>Ошибка II рода (пропустили эффект), вероятность β</td></tr>
+  </tbody>
+</table>
+
+<p>Порог α обычно 0,05. В ноутбуке он явно не задан, но выводы читаются именно так: p &lt; 0,05 — «различие есть», p ≥ 0,05 — «данных недостаточно».</p>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Фраза «не отвергаем H₀» не означает «H₀ верна». Она означает «различие не обнаружено». Особенно часто это путают на маленьких группах: в гипотезе 4 пара senior–executive дала p = 0,12 именно потому, что executive — всего 23 наблюдения. Это не доказательство отсутствия разницы, а нехватка данных.</p>
+</div>
+
+<div class="box theory">
+  <span class="label">Теория</span>
+  <p><b>Почему p зависит от размера выборки.</b> Чем больше данных, тем точнее оценка среднего/медианы и тем меньшие различия становятся заметны на фоне шума. При 9 000 строк даже разница в 1 % может дать p &lt; 0,001. Поэтому рядом с p всегда нужен размер эффекта.</p>
+</div>
+
+<h2 id="s4-2">4.2. Какие тесты здесь используются и почему</h2>
+
+<table>
+  <thead><tr><th style="width:22%">Инструмент</th><th style="width:31%">Когда применяется</th><th>Что именно проверяет</th></tr></thead>
+  <tbody>
+    <tr><td><b>Kruskal–Wallis</b></td><td>3+ группы, числовой признак</td><td>Все группы из одного распределения (сдвиг хотя бы у одной). Не говорит, какие именно группы различаются.</td></tr>
+    <tr><td><b>Mann–Whitney U</b></td><td>2 группы, числовой признак</td><td>Сдвиг распределений; устойчив к выбросам и скошенности.</td></tr>
+    <tr><td><b>χ² (хи-квадрат)</b></td><td>Две категориальные переменные</td><td>Связаны ли они: например, зависит ли доля remote от наличия страны.</td></tr>
+    <tr><td><b>Spearman ρ</b></td><td>Две числовые переменные</td><td>Монотонная связь; считается по рангам, поэтому не боится выбросов.</td></tr>
+    <tr><td><b>Pearson r</b></td><td>Две числовые переменные</td><td>Линейная связь; чувствителен к выбросам.</td></tr>
+    <tr><td><b>Jarque–Bera</b></td><td>Одна числовая переменная</td><td>Похоже ли распределение на нормальное (через асимметрию и эксцесс).</td></tr>
+  </tbody>
+</table>
+
+<h3>Почему не t-тест</h3>
+<p>Классический t-тест сравнивает <b>средние</b> и предполагает, что данные примерно нормальны, а дисперсии групп сопоставимы. Зарплаты скошены вправо, имеют тяжёлый хвост и разброс, который сильно отличается между странами и уровнями. На таких данных t-тест может давать неверные p-value, а среднее — не описывать «типичную» зарплату.</p>
+
+<p>Ранговые тесты (Kruskal–Wallis, Mann–Whitney) работают не с самими значениями, а с их порядком. Выброс в 600 тысяч получает максимальный ранг, но не «перевешивает» всю группу. Это делает их устойчивыми и уместными для зарплат. Плата за это — гипотеза о сдвиге распределения формулируется осторожнее, чем «разница медиан».</p>
+
+<div class="box why">
+  <span class="label">Почему так</span>
+  <p>В ноутбуке почти всюду сравниваются медианы, а не средние. Медиана — это зарплата «типичной» вакансии: половина вакансий дешевле, половина дороже. Она не сдвигается от одного гигантского выброса. Среднее в таких данных полезно для суммарных бюджетов, но не для описания рынка.</p>
+</div>
+
+<h3>Пост-хок сравнения</h3>
+<p>Kruskal–Wallis отвечает «где-то есть различие», но не «между какими группами». Поэтому после него в ноутбуке идут парные Mann–Whitney: entry–mid, mid–senior, senior–executive. Каждый парный тест — это ещё одна проверка, поэтому p умножается на число сравнений (поправка Бонферрони).</p>
+
+<h3>Корреляции</h3>
+<p>Pearson r измеряет, насколько точки ложатся на прямую. Spearman ρ — насколько они монотонно растут. Для «ширины вилки» и зарплаты связь нелинейная, поэтому используется Spearman. Знак показывает направление, модуль — силу: 0,1 — слабая, 0,3 — умеренная, 0,5 — заметная, 0,7+ — сильная.</p>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Корреляция не равна причинности и не равна вкладу в модель. Два признака могут коррелировать с зарплатой, но дублировать друг друга. Именно поэтому в ноутбуке после корреляций всегда идёт сравнение моделей.</p>
+</div>
+
+<h3>Регрессия с контролем на конфаундеры</h3>
+<p>В гипотезах 9 и 14 используется OLS:</p>
+<pre><code>smf.ols('log_salary ~ C(workplace_type, Treatment("onsite"))', data=work_df).fit(cov_type="HC1")</code></pre>
+<p>Это линейная регрессия, где <span class="mono">onsite</span> — базовая категория. Коэффициент при <span class="mono">remote</span> показывает среднюю разницу в лог-зарплате по сравнению с onsite. Перевод в проценты:</p>
+<pre><code>percent = (exp(beta) - 1) * 100</code></pre>
+<p>Формула работает потому, что при малых β <span class="mono">exp(β) − 1 ≈ β</span>, а для больших — даёт точную мультипликативную разницу. <span class="mono">HC1</span> — устойчивая к гетероскедастичности оценка стандартных ошибок: разброс зарплат не одинаков во всех группах, и обычные ошибки были бы слишком оптимистичны.</p>
+
+<p>Во второй модели добавляются контроли: ATS, семейство профессий, тип занятости, период. Смысл — сравнить remote и onsite <i>при прочих равных</i>. Если премия резко падает, значит, исходная разница в основном объяснялась составом выборки.</p>
+
+<h2 id="s4-3">4.3. Размер эффекта: значимо ≠ важно</h2>
+
+<p>p-value говорит, есть ли сигнал. Размер эффекта говорит, насколько он большой. В ноутбуке используются три меры.</p>
+
+<h3>ε² для Kruskal–Wallis</h3>
+<pre><code>eps2 = (H - k + 1) / (n - k)</code></pre>
+<p>где H — статистика теста, k — число групп, n — число наблюдений. Интерпретация по Коэну: 0,01 — маленький эффект, 0,06 — средний, 0,14 — большой. Значения в ноутбуке: 0,20 для seniority, 0,33 для периода, 0,17 для семейства профессий — это большие эффекты.</p>
+
+<h3>Разница медиан и проценты</h3>
+<p>«Медиана remote 130k против onsite 77k» понятнее, чем «p &lt; 0,001». Проценты удобны для сравнения признаков с разными единицами: «remote дороже на 6 % при прочих равных».</p>
+
+<h3>Прирост MAE</h3>
+<p>Это самая практичная мера в ноутбуке: на сколько долларов уменьшается средняя абсолютная ошибка, если добавить признак. Она отвечает не «влияет ли признак», а «сколько он приносит модели». Прирост может быть нулевым или отрицательным даже у значимого признака — это нормально.</p>
+
+<div class="box res">
+  <span class="label">Результат</span>
+  <p>Исходный период — самый сильный категориальный признак: ε² = 0,33 и прирост MAE около 6,6k. ATS — ε² = 0,14 и прирост 1,1k. Страна — ε² = 0,09. То есть «сила связи» и «польза для модели» — разные вещи, и смотреть надо на обе.</p>
+</div>
+
+<h2 id="s4-4">4.4. Множественные проверки</h2>
+
+<p>В ноутбуке 21 основная гипотеза плюс десятки парных сравнений. Если проверять каждую на уровне α = 0,05, то даже при полном отсутствии эффектов примерно 5 % проверок дадут ложноположительный результат. На 21 проверке это в среднем одна «случайная находка».</p>
+
+<p>Меры борьбы:</p>
+<ul>
+  <li><b>Поправка Бонферрони:</b> умножить каждое p на число проверок (или сравнивать с α/m). В ноутбуке так сделано для парных Mann–Whitney. Консервативно, но просто.</li>
+  <li><b>FDR (Benjamini–Hochberg):</b> контролирует долю ложных открытий среди отвергнутых гипотез; мягче Бонферрони, чаще используется в исследованиях.</li>
+  <li><b>Предрегистрация и разделение на подтверждающий/исследовательский анализ.</b> Если гипотезы придуманы после просмотра данных, это уже не подтверждающий тест.</li>
+</ul>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Автор ноутбука честно пишет: «проверки множественные, p-value здесь — ориентир, а не окончательное доказательство». Это правильная позиция. Не превращайте p = 0,04 в заголовок «доказано», особенно если гипотеза родилась после просмотра графика.</p>
+</div>
+
+<h2 id="s4-5">4.5. Кросс-валидация и метрики</h2>
+
+<p>Модель нельзя оценивать на данных, на которых она училась: она запомнит их и покажет красивые, но бесполезные метрики. Поэтому данные делят на обучение и проверку. Один hold-out может дать шумную оценку, поэтому используют <b>k-fold кросс-валидацию</b>: данные делят на k частей, k раз обучают на k−1 частях и предсказывают оставшуюся.</p>
+
+<pre><code>FOLDS = list(KFold(5, shuffle=True, random_state=RANDOM_STATE).split(df))</code></pre>
+
+<p>В ноутбуке k = 5, перемешивание включено, <span class="mono">random_state = 42</span> для воспроизводимости. Ключевая деталь: <b>все модели сравниваются на одних и тех же фолдах</b>. Тогда разница метрик отражает вклад признака, а не случайность разбиения.</p>
+
+<pre><code>pred = np.full(len(X), np.nan)
+for train_idx, test_idx in folds:
+    fitted = fit_hgb(X.iloc[train_idx], y.iloc[train_idx])
+    pred[test_idx] = predict_hgb(fitted, X.iloc[test_idx])
+</code></pre>
+
+<p>Так получается <b>out-of-fold предсказание</b> для каждой строки: оно сделано моделью, которая эту строку не видела. Дальше метрика считается по всему массиву.</p>
+
+<div class="box why">
+  <span class="label">Почему 5 фолдов и random_state=42</span>
+  <p>Пять фолдов — компромисс: при меньшем числе тестовая часть слишком мала и оценка шумная, при большем — растёт время обучения, а выигрыш в точности оценки небольшой. <span class="mono">random_state=42</span> не имеет статистического смысла: это соглашение, которое делает разбиение воспроизводимым у всех, кто запускает ноутбук. Без него повторный запуск даст другие фолды и немного другие метрики.</p>
+</div>
+
+<h3>Метрики</h3>
+<table>
+  <thead><tr><th style="width:16%">Метрика</th><th style="width:38%">Формула / смысл</th><th>Как читать</th></tr></thead>
+  <tbody>
+    <tr><td><b>MAE, $</b></td><td>Среднее абсолютной ошибки после возврата из лога: <span class="mono">mean(|expm1(pred) − salary_mid|)</span></td><td>«В среднем модель ошибается на N долларов». Понятно бизнесу, но чувствительно к дорогим вакансиям.</td></tr>
+    <tr><td><b>RMSLE</b></td><td>Корень из средней квадратичной ошибки в лог-шкале</td><td>Относительная ошибка: одинаково наказывает за +10 % на 50k и на 200k. Удобно для скошенных зарплат.</td></tr>
+    <tr><td><b>R² (log)</b></td><td>Доля дисперсии лог-зарплаты, объяснённая моделью</td><td>0 — как константа, 1 — идеально; может быть отрицательным на тесте. Сравнивать R² можно только в одной шкале.</td></tr>
+  </tbody>
+</table>
+
+<div class="box theory">
+  <span class="label">Теория</span>
+  <p><b>log1p и expm1.</b> <span class="mono">log1p(x) = log(1+x)</span> определён при x = 0 и почти не искажает большие числа. Обратное преобразование — <span class="mono">expm1(z) = exp(z) − 1</span>. Использовать <span class="mono">log(x)</span> и <span class="mono">exp(z)</span> можно, только если нулей нет; в зарплатах ноль теоретически возможен, поэтому выбран <span class="mono">log1p</span>.</p>
+</div>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>R² в лог-шкале и R² в долларах — не одно и то же. В гипотезе 1 log-модель выигрывает по RMSLE, но немного проигрывает по R² на исходной шкале. Это не противоречие: метрики отвечают на разные вопросы. Выбор метрики — это выбор того, какая ошибка для вас дороже.</p>
+</div>
+
+<h2 id="s4-6">4.6. Утечка данных (leakage)</h2>
+
+<p>Утечка — ситуация, когда в признаки попадает информация, которой не будет в момент реального прогноза, или информация о таргете. Признак утечки — подозрительно хорошие метрики.</p>
+
+<p>В ноутбуке есть три учебных примера:</p>
+<ol>
+  <li><b>Гипотеза 20.</b> <span class="mono">salary_min</span> отлично предсказывает <span class="mono">salary_max</span> (R² 0,92), но это не прогноз: обе величины — части одной вилки. Для «холодного» прогноза такой признак недоступен.</li>
+  <li><b>Гипотеза 18.</b> 87 % описаний содержат явные суммы. TF-IDF на сыром тексте частично «подглядывает» в ответ. Поэтому автор очищает денежные паттерны и показывает, что сигнал остаётся (MAE 27,7k против 40,6k у метаданных).</li>
+  <li><b>Гипотеза 13.</b> Target encoding компании нужно считать только на train-фолдах. Если закодировать всю таблицу средним по компании, в признак попадёт зарплата тестовой строки, и метрика станет нереалистично хорошей.</li>
+</ol>
+
+<div class="box why">
+  <span class="label">Почему так</span>
+  <p>Правило простое: <b>сначала разделение, потом любые вычисления, использующие таргет</b>. Средние, target encoding, отбор признаков, масштабирование — всё должно обучаться на train и применяться к test. В ноутбуке это реализовано в <span class="mono">cv_predict_target_encoding</span>: энкодер обучается внутри каждого фолда.</p>
+</div>
+
+<h2 id="s4-7">4.7. Наблюдательные данные и причинность</h2>
+
+<p>Данные не из эксперимента: мы не назначали компании формат работы и не случайно распределяли уровни. Поэтому любая связь может объясняться третьим фактором — <b>конфаундером</b>.</p>
+
+<p>Пример из гипотезы 9. Сырые медианы: remote 130k, onsite 77k. Выглядит как «remote повышает зарплату на 45 %». Но remote-вакансии чаще в tech-компаниях, на senior-позициях, с другим ATS и периодом оплаты. После контроля на эти признаки премия падает до +5,9 %. Значит, большая часть разницы — состав выборки, а не сам формат работы.</p>
+
+<p>Регрессия с контролем помогает <i>описать</i> связь при наблюдаемых признаках, но не доказывает причинность: остаются ненаблюдаемые факторы (бренд компании, грейд, стек, переговорная сила кандидата).</p>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Формулировки «влияет», «повышает», «из-за» в отчёте лучше заменять на «связан», «ассоциирован», «при прочих равных разница составляет». Если нужен причинный вывод, нужен дизайн: эксперимент, diff-in-diff, инструментальные переменные или хотя бы явная causal-модель.</p>
+</div>
+
+<h2 id="s4-8">4.8. Пропуски и выбросы</h2>
+
+<h3>Типы пропусков</h3>
+<ul>
+  <li><b>MCAR</b> (missing completely at random) — пропуск не связан ни с чем. Тогда удаление строк корректно, но теряет данные.</li>
+  <li><b>MAR</b> (missing at random) — пропуск связан с другими наблюдаемыми признаками. Можно заполнять моделью по другим колонкам.</li>
+  <li><b>MNAR</b> (missing not at random) — пропуск связан с самим ненаблюдаемым значением. Самый опасный случай: нельзя игнорировать.</li>
+</ul>
+
+<p>В ноутбуке проверяется простая, но важная мысль: пропуск <span class="mono">country_code</span> связан с платформой и форматом работы, а пропуск <span class="mono">seniority</span> — с более высокой зарплатой. Значит, пропуски не случайны. При этом отдельные индикаторы <span class="mono">is_missing_*</span> не улучшают модель, потому что информация уже присутствует в категории «Unknown».</p>
+
+<h3>Выбросы по Тьюки</h3>
+<p>Границы считаются по межквартильному размаху:</p>
+<pre><code>IQR = Q3 - Q1
+нижняя граница = Q1 - 1.5 * IQR
+верхняя граница = Q3 + 1.5 * IQR</code></pre>
+<p>Всё за границами помечается как выброс. Важно: выброс — не всегда ошибка. Это может быть реальная зарплата топ-менеджера. Поэтому в ноутбуке выбросы не удаляются, а флагируются, и отдельно проверяется подозрение на ошибку периода (гипотеза 17).</p>
+
+<div class="box res">
+  <span class="label">Результат</span>
+  <p>Подозрительных строк всего 42 (0,5 %), но их средняя зарплата — 631k против 114k. Модель ошибается на них примерно на 500k. Исключение таких строк из обучения улучшает MAE на чистых данных лишь на ~0,3k, потому что их доля мала. Вывод: ошибки надо находить, но глобального чуда от чистки ждать не стоит.</p>
+</div>
+</div>
+
+<!-- ================= 5 ================= -->
+<div class="part">
+<h1 id="s5">5. Подготовка данных: что делает каждая ячейка</h1>
+
+<p class="lead">Первый содержательный блок ноутбука — не тесты, а конструирование признаков. Здесь важно понимать не каждую строку, а назначение шагов: что именно мы приводим к общему виду и какие новые смыслы создаём.</p>
+
+<h2>5.1. Загрузка и фильтрация</h2>
+<pre><code>raw = load_data()
+df = raw.dropna(subset=["salary_min", "salary_max"]).copy().reset_index(drop=True)</code></pre>
+<p>Строки без границ вилки удаляются: без них нельзя посчитать таргет. <span class="mono">reset_index(drop=True)</span> перенумеровывает строки, чтобы позиционные индексы совпадали с <span class="mono">numpy</span>-массивами и фолдами.</p>
+
+<h2>5.2. Приведение периода и валюты к долларам в год</h2>
+<pre><code>PERIOD_COEF = {"day": 260, "week": 52, "month": 12, "hour": 2080, "year": 1}
+CURRENCY_COEF = {"USD": 1.0, "EUR": 0.89, "CAD": 1.42, "GBP": 0.75, ...}
+
+df["salary_min_usd"] = (
+    df["salary_min"] * df["raw_period"].map(PERIOD_COEF) / df["raw_currency"].map(CURRENCY_COEF)
+)</code></pre>
+<p>Логика: сначала сумму умножают на коэффициент периода (сколько таких периодов в году), затем делят на курс валюты к доллару. Например, 50 долларов в час → 50 × 2 080 = 104 000 долларов в год; 60 000 евро → 60 000 / 0,89 ≈ 67 416 долларов.</p>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Коэффициенты — это соглашение, а не истина. 2 080 часов — это 40 часов × 52 недели, без отпуска и праздников. Для почасовых вакансий годовая сумма может быть завышена. Курсы зафиксированы на дату сбора. Если вы переносите код на другие данные, коэффициенты и курсы нужно обновить и задокументировать.</p>
+</div>
+
+<h2>5.3. Таргет и производные величины</h2>
+<pre><code>df["salary_mid"] = (df["salary_min_usd"] + df["salary_max_usd"]) / 2
+df["log_salary"] = np.log1p(df["salary_mid"])
+df["spread"] = df["salary_max_usd"] - df["salary_min_usd"]
+df["spread_pct"] = df["spread"] / df["salary_mid"]</code></pre>
+<p><span class="mono">salary_mid</span> — таргет; <span class="mono">log_salary</span> — тот же таргет в лог-шкале, на нём обучается большинство моделей; <span class="mono">spread</span> — абсолютная ширина вилки, <span class="mono">spread_pct</span> — относительная. Последние две нужны для гипотезы 3.</p>
+
+<div class="box why">
+  <span class="label">Почему так</span>
+  <p>Середина вилки — компромисс между min и max. Она устойчивее min (не занижена для вакансий, где нижняя граница — формальность) и не раздута, как max. Кроме того, как показала гипотеза 2, min и max почти коллинеарны, поэтому отдельные модели для них дублируют друг друга.</p>
+</div>
+
+<h2>5.4. Флаги выбросов и подозрительного периода</h2>
+<pre><code>def iqr_bounds(values):
+    q1, q3 = values.quantile([0.25, 0.75])
+    iqr = q3 - q1
+    return q1 - 1.5 * iqr, q3 + 1.5 * iqr
+
+for col in ["salary_min_usd", "salary_max_usd"]:
+    low, high = iqr_bounds(df[col])
+    df[f"outlier_{col}"] = (df[col] &lt; low) | (df[col] &gt; high)
+
+df["outlier_any"] = df["outlier_salary_min_usd"] | df["outlier_salary_max_usd"]
+df["period_suspect"] = df["outlier_any"] &amp; df["raw_period"].ne("year")</code></pre>
+<p>Флаг <span class="mono">period_suspect</span> объединяет два условия: сумма выглядит выбросом <i>и</i> период не годовой. Гипотеза: возможно, годовая сумма была ошибочно записана как почасовая или наоборот. Такие строки не удаляются, а помечаются — их влияние проверяется в гипотезе 17.</p>
+
+<h2>5.5. Индикаторы пропусков</h2>
+<pre><code>MISSING_FIELDS = ["seniority", "workplace_type", "country_code", "language",
+                  "department", "employment_type", "region", "city"]
+for col in MISSING_FIELDS:
+    df[f"is_missing_{col}"] = df[col].isna().astype(int)</code></pre>
+<p>Для каждого поля создаётся бинарный признак «здесь пропуск». Это нужно, чтобы проверить гипотезу 19: сам факт отсутствия данных может быть сигналом.</p>
+
+<h2>5.6. Базовая группа категориальных признаков</h2>
+<pre><code>BASE = ["ats", "employment_type", "workplace_type", "country_code", "salary_source", "raw_period"]
+for col in BASE:
+    df[col] = df[col].fillna("Unknown").astype(str)</code></pre>
+<p>Пропуски заменяются на строку <span class="mono">"Unknown"</span>, а не на моду или среднее. Причина: пропуск не случаен и может нести информацию. Категория «нет данных» — это отдельное состояние, а не «средний ATS».</p>
+
+<div class="box theory">
+  <span class="label">Теория</span>
+  <p>Заполнение категориального пропуска модой — популярный, но часто вредный приём. Оно смешивает «нет данных» с самой частой категорией и скрывает структуру пропуска. Если пропуск информативен, лучше явная категория <span class="mono">"Unknown"</span> или отдельный флаг.</p>
+</div>
+
+<h2>5.7. Семейство профессии из названия</h2>
+<pre><code>FAMILY_PATTERNS = {
+    "engineering": r"engineer|developer|software|...",
+    "sales": r"\bsales\b|account executive|...",
+    ...
+}
+def job_family(title):
+    text = str(title).lower()
+    for family, pattern in FAMILY_PATTERNS.items():
+        if re.search(pattern, text):
+            return family
+    return "other"
+df["job_family"] = df["title"].map(job_family)</code></pre>
+<p>Это правило-эвристика: если в названии встретилось слово из шаблона, вакансия относится к семейству. Порядок словаря важен: первое совпадение выигрывает. Например, «Data Engineer» попадёт в engineering.</p>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Эвристика ошибается: «Sales Engineer» может уйти в engineering, «Product Designer» — в design_product, а 34 % вакансий остаются в <span class="mono">other</span>. Это приемлемо для исследовательского анализа, но для продакшена лучше обучаемый классификатор по title или эмбеддинги. Автор ноутбука сам это отмечает.</p>
+</div>
+
+<h2>5.8. Штат из географии</h2>
+<pre><code>def extract_state(row):
+    text = f"{row.get('location', '')}, {row.get('region', '')}"
+    ...  # поиск полного названия штата, затем двухбуквенного кода
+    return None
+
+df["state_model"] = np.where(df["country_code"].eq("US"), df["state"].fillna("Unknown"), "Unknown")</code></pre>
+<p>Штат извлекается только для США, потому что для других стран такая детализация либо отсутствует, либо несопоставима. Полные названия («California») переводятся в коды («CA»), затем коды ищутся в тексте. Покрытие — около 82 % американских вакансий.</p>
+
+<h2>5.9. Даты</h2>
+<pre><code>df["posted"] = pd.to_datetime(df["posted_at"], utc=True)
+df["lag_hours"] = (df["first_seen"] - df["posted"]).dt.total_seconds() / 3600
+df["posted_dow"] = df["posted"].dt.day_name()
+df["posted_hour"] = df["posted"].dt.hour
+df["days_since_start"] = (df["posted"] - df["posted"].min()).dt.total_seconds() / 86400</code></pre>
+<p>Из дат извлекаются день недели, час, задержка до первого обнаружения и «возраст» вакансии относительно начала сбора. Гипотеза 21 проверяет, есть ли в этом сигнал.</p>
+
+<h2>5.10. Единые фолды</h2>
+<pre><code>FOLDS = list(KFold(5, shuffle=True, random_state=RANDOM_STATE).split(df))</code></pre>
+<p>Фолды создаются один раз и переиспользуются. Это принципиально: если для каждой гипотезы генерировать новое разбиение, разница MAE будет частично случайной. С общими фолдами сравнение становится парным.</p>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Случайные фолды подходят для сравнения моделей на одних данных, но не для честного прогноза «в будущее». Если бы данные охватывали несколько месяцев, нужно было бы использовать временное разбиение (train — прошлое, test — будущее). Здесь окно всего неделя, поэтому random KFold допустим, но это ограничение стоит проговаривать.</p>
+</div>
+</div>
+
+<!-- ================= 6 ================= -->
+<div class="part">
+<h1 id="s6">6. Вспомогательные функции: «двигатель» ноутбука</h1>
+
+<p class="lead">После подготовки данных идут десять небольших функций. Они избавляют от копирования кода и, что важнее, фиксируют методику: все гипотезы считаются одинаково. Разберём каждую.</p>
+
+<h2>6.1. Форматирование p-value</h2>
+<pre><code>def pfmt(p):
+    if p &lt; 1e-300: return "&lt;1e-300"
+    if p &lt; 1e-4:  return f"{p:.1e}"
+    return f"{p:.3f}"</code></pre>
+<p>Нужна, чтобы в таблицах не появлялись числа вроде <span class="mono">3.27e-117</span> и чтобы крошечные p не выглядели как ноль. «p &lt; 1e-300» — это не ноль, а «меньше любой разумной точности».</p>
+
+<h2>6.2. Метрики</h2>
+<pre><code>def metrics(pred_log, actual):
+    usd = np.expm1(pred_log)
+    return {
+        "MAE, $": int(round(mean_absolute_error(actual, usd))),
+        "RMSLE": round(float(np.sqrt(np.mean((pred_log - np.log1p(actual)) ** 2))), 3),
+        "R2 (log)": round(float(r2_score(np.log1p(actual), pred_log)), 3),
+    }</code></pre>
+<p>Функция принимает предсказания в лог-шкале, возвращает три метрики: MAE в долларах (после <span class="mono">expm1</span>), RMSLE и R² в лог-шкале. Важно, что все модели в ноутбуке предсказывают лог — так метрики сопоставимы.</p>
+
+<h2>6.3. Kruskal–Wallis с размером эффекта</h2>
+<pre><code>def kruskal_table(data, value, group, min_n=20):
+    d = data.dropna(subset=[value, group]).copy()
+    counts = d.groupby(group).size()
+    keep = counts[counts &gt;= min_n].index
+    d = d[d[group].isin(keep)]
+    groups = [g[value].to_numpy() for _, g in d.groupby(group)]
+    H, p = stats.kruskal(*groups)
+    n, k = len(d), len(groups)
+    eps2 = (H - k + 1) / (n - k) if n &gt; k else np.nan
+    table = d.groupby(group)[value].agg(["median", "size"]).sort_values("median", ascending=False)
+    return {"H": H, "p": p, "eps2": eps2, "table": table, "n": n, "k": k}</code></pre>
+<p>Что важно в этой функции:</p>
+<ul>
+  <li><span class="mono">dropna</span> — тест не принимает пропуски.</li>
+  <li><span class="mono">min_n</span> — группы меньше порога отбрасываются, иначе тест опирается на единичные наблюдения и даёт нестабильные p.</li>
+  <li><span class="mono">eps2</span> — размер эффекта, который не зависит от размера выборки.</li>
+  <li>Таблица отсортирована по медиане — удобно сразу увидеть порядок групп.</li>
+</ul>
+
+<h2>6.4. Парные сравнения с поправкой</h2>
+<pre><code>def pairwise_mw(data, value, group, pairs):
+    rows = []
+    for a, b in pairs:
+        x = data.loc[data[group].eq(a), value].dropna()
+        y = data.loc[data[group].eq(b), value].dropna()
+        _, p = stats.mannwhitneyu(x, y)
+        rows.append({... "p": p, "p (Bonferroni)": min(1.0, p * len(pairs))})
+    return pd.DataFrame(rows)</code></pre>
+<p>Для каждой пары считается Mann–Whitney, затем p умножается на число пар. Это и есть поправка Бонферрони: мы «платим» за каждую дополнительную проверку.</p>
+
+<h2>6.5. Модель HistGradientBoosting</h2>
+<pre><code>def make_hgb():
+    return HistGradientBoostingRegressor(
+        max_iter=300, learning_rate=0.05, max_leaf_nodes=31,
+        l2_regularization=1.0, random_state=RANDOM_STATE,
+        early_stopping=False, categorical_features=None,
+    )</code></pre>
+<p><b>HistGradientBoosting</b> — градиентный бустинг на деревьях, оптимизированный для табличных данных. Он строит много неглубоких деревьев, каждое следующее исправляет ошибки предыдущих. Гиперпараметры:</p>
+<table>
+  <thead><tr><th style="width:24%">Параметр</th><th>Зачем нужен</th></tr></thead>
+  <tbody>
+    <tr><td><span class="mono">max_iter=300</span></td><td>Число деревьев. Больше — точнее на train, но дольше и риск переобучения.</td></tr>
+    <tr><td><span class="mono">learning_rate=0.05</span></td><td>Вклад каждого дерева. Меньше — плавнее и устойчивее, но нужно больше деревьев.</td></tr>
+    <tr><td><span class="mono">max_leaf_nodes=31</span></td><td>Сложность дерева. Ограничивает взаимодействия признаков.</td></tr>
+    <tr><td><span class="mono">l2_regularization=1.0</span></td><td>Штраф за большие веса листьев; борется с переобучением.</td></tr>
+    <tr><td><span class="mono">early_stopping=False</span></td><td>Отключён, чтобы все модели обучались одинаково и сравнение было честным.</td></tr>
+  </tbody>
+</table>
+
+<div class="box why">
+  <span class="label">Почему так</span>
+  <p>Бустинг выбран как «рабочая лошадка», а не как лучшая возможная модель. Он хорошо ловит нелинейности и взаимодействия, не требует масштабирования, устойчив к выбросам и умеет работать с категориями. Для сравнения гипотез важна не максимальная точность, а стабильность и одинаковая обработка признаков.</p>
+</div>
+
+<pre><code>def fit_hgb(X_train, y_train):
+    cats = [c for c in X_train.columns if not pd.api.types.is_numeric_dtype(X_train[c])]
+    nums = [c for c in X_train.columns if c not in cats]
+    encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+    cat_part = encoder.fit_transform(X_train[cats].astype(str)) if cats else np.empty((len(X_train), 0))
+    num_part = X_train[nums].to_numpy(dtype=float)
+    mask = np.array([True] * len(cats) + [False] * len(nums))
+    model = make_hgb()
+    model.set_params(categorical_features=mask)
+    model.fit(np.hstack([cat_part, num_part]), y_train)
+    return model, encoder, cats, nums</code></pre>
+<p>Здесь категории кодируются порядковыми номерами, но модели явно сообщается, какие колонки категориальные (маска <span class="mono">categorical_features</span>). Внутри она обрабатывает их как категории, а не как числа. <span class="mono">handle_unknown="use_encoded_value", unknown_value=-1</span> спасает, если в тесте встретилась категория, которой не было в train.</p>
+
+<h2>6.6. Кросс-валидация с дополнительными признаками</h2>
+<pre><code>def cv_predict(X, y, folds=FOLDS, extra=None):
+    X = X.copy()
+    if extra is not None:
+        for key, values in extra.items():
+            X[key] = np.asarray(values)
+    pred = np.full(len(X), np.nan)
+    for train_idx, test_idx in folds:
+        fitted = fit_hgb(X.iloc[train_idx], y.iloc[train_idx])
+        pred[test_idx] = predict_hgb(fitted, X.iloc[test_idx])
+    return pred</code></pre>
+<p>Параметр <span class="mono">extra</span> позволяет добавить признак к базовому набору, не переписывая цикл. Именно так проверяется вклад <span class="mono">job_family</span>, <span class="mono">seniority_pred</span>, дат и флагов пропусков.</p>
+
+<h2>6.7. Target encoding без утечки</h2>
+<pre><code>def cv_predict_target_encoding(X, y, column, folds=FOLDS):
+    groups = df[column].reset_index(drop=True)
+    pred = np.full(len(X), np.nan)
+    for train_idx, test_idx in folds:
+        encoder = TargetEncoder(cv=KFold(5, shuffle=True, random_state=RANDOM_STATE), smooth="auto")
+        X_train = X.iloc[train_idx].copy()
+        X_test = X.iloc[test_idx].copy()
+        X_train["__target_enc"] = encoder.fit_transform(
+            groups.iloc[train_idx].to_frame(), y.iloc[train_idx]).ravel()
+        X_test["__target_enc"] = encoder.transform(groups.iloc[test_idx].to_frame()).ravel()
+        fitted = fit_hgb(X_train, y.iloc[train_idx])
+        pred[test_idx] = predict_hgb(fitted, X_test)
+    return pred</code></pre>
+<p><b>Target encoding</b> заменяет категорию (например, компанию) средним таргетом по этой категории. Компаний почти 4 000, one-hot дал бы тысячи разреженных колонок, а target encoding — одну числовую. Внутренний <span class="mono">cv=KFold(5)</span> считает кодировку по частям train, чтобы не подглядывать в таргет; <span class="mono">smooth="auto"</span> сглаживает средние для редких компаний к общему среднему.</p>
+
+<div class="box warn">
+  <span class="label">Осторожно</span>
+  <p>Target encoding — чемпион по утечкам. Если посчитать средний таргет по всей таблице и потом разбить на фолды, модель получит подсказку и покажет завышенное качество. В продакшене энкодер обучают на исторических данных и аккуратно применяют к новым категориям (с запасным значением).</p>
+</div>
+
+<h2>6.8. Журнал выводов</h2>
+<pre><code>SUMMARY = []
+def add_summary(number, hypothesis, method, result, verdict):
+    SUMMARY.append({"№": number, "Гипотеза": hypothesis, ...})
+
+BASE_PRED = cv_predict(df[BASE], df.log_salary)
+BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
+<p><span class="mono">add_summary</span> — это не статистика, а инженерная привычка: каждая проверка сразу записывается в сводку с номером, методом, результатом и вердиктом. В конце из списка собирается таблица. Такой журнал спасает от ситуации «пять графиков посмотрел, а что решил — забыл».</p>
+
+<p><span class="mono">BASE_PRED</span> — out-of-fold предсказания базовой модели на шести категориальных признаках. Это точка отсчёта: прирост MAE во всех гипотезах считается относительно неё.</p>
+
+<div class="box res">
+  <span class="label">Результат</span>
+  <p>Базовая модель ошибается в среднем на 39,9 тысячи долларов. Дальше каждый признак оценивается по тому, насколько он уменьшает эту ошибку. Такой «долларовый» язык делает выводы понятными даже без статистического образования.</p>
+</div>
+</div>
+
+<!-- ================= 7 ================= -->
+<div class="part">
+<h1 id="s7">7. Разбор 21 гипотезы</h1>
+
+<p class="lead">Это ядро методички. Для каждой гипотезы: зачем она нужна, как её проверяли, что получилось, как это понимать и где подстерегает ошибка. Числа взяты из выводов ноутбука; они могут немного меняться при повторном запуске из-за версий библиотек и порядка операций, но порядок величин устойчив.</p>
+
+<div class="box theory">
+  <span class="label">Как устроена карточка</span>
+  <p><b>Вопрос</b> — проверяемое утверждение. <b>Как проверяли</b> — данные, тест, модель. <b>Что получилось</b> — ключевые числа. <b>Как понимать</b> — интерпретация и связь с теорией. <b>Чему учит</b> — переносимый приём или предупреждение. Внизу — вердикт автора ноутбука.</p>
+</div>
+
+<h2 id="s7-1">7.1. Таргет: гипотезы 1–3</h2>
+
+<div class="card">
+<h3><span class="num">1</span> Предсказывать логарифм зарплаты, а не саму зарплату</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Улучшит ли модель переход от <span class="mono">salary_mid</span> к <span class="mono">log1p(salary_mid)</span>?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Сначала описательно: коэффициент асимметрии (skew), тест Jarque–Bera на нормальность, QQ-графики. Затем одна и та же модель (<span class="mono">HistGradientBoosting</span>) обучалась дважды — на исходной зарплате и на логарифме — на одних и тех же 5 фолдах. Метрики пересчитывались в доллары через <span class="mono">expm1</span>.</dd>
+
+<dt>Что получилось</dt>
+<dd>Skew падает с 3,56 до −0,08, то есть распределение становится почти симметричным. RMSLE улучшается с 0,738 до 0,451. MAE тоже немного снижается. При этом R² на исходной шкале у лог-модели чуть ниже: 0,279 против 0,302.</dd>
+
+<dt>Как понимать</dt>
+<dd>Логарифм сжимает правый хвост и превращает процентные различия в равные шаги. Модель перестаёт «гоняться» за дорогими вакансиями и лучше предсказывает типичные. Jarque–Bera формально отвергает нормальность в обоих случаях (на 9 000 наблюдений любой тест это сделает), но skew и QQ-plot показывают, что лог-шкала гораздо ближе к симметрии.</dd>
+
+<dt>Чему учит</dt>
+<dd>Выбор шкалы таргета — это не косметика, а выбор того, какую ошибку вы считаете важной. Лог-шкала оптимизирует относительную ошибку, исходная — абсолютную. Кроме того, после <span class="mono">expm1</span> предсказание смещено: медиана лог-нормального распределения не равна среднему. Для MAE это не критично, но для оценки суммарного бюджета нужна поправка на смещение.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена (с оговоркой)</span>
+</div>
+
+<div class="card">
+<h3><span class="num">2</span> Один таргет — середина вилки, а не min и max по отдельности</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Можно ли ограничиться одним числом на вакансию, если вилка состоит из двух границ?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Посчитали корреляцию Пирсона и Спирмена между <span class="mono">salary_min_usd</span> и <span class="mono">salary_max_usd</span>. Затем обучили три одинаковые модели — на логарифме min, середины и max — и сравнили MAE, RMSLE и R².</dd>
+
+<dt>Что получилось</dt>
+<dd>Pearson 0,944; Spearman 0,958 — границы почти коллинеарны. Модели для min, mid и max дают близкие ошибки, а R² у середины максимален (0,474).</dd>
+
+<dt>Как понимать</dt>
+<dd>Если две величины почти линейно связаны, отдельная модель для второй не добавляет информации. Середина — удобный компромисс: она не занижена, как нижняя граница (иногда указывают формальный минимум), и не раздута, как верхняя. Зная середину и относительную ширину, границы можно восстановить приблизительно.</dd>
+
+<dt>Чему учит</dt>
+<dd>Прежде чем строить несколько моделей, проверьте корреляцию таргетов. Часто одна модель плюс производные признаки решают задачу лучше и проще. Но выбор середины — не универсальное правило: если бизнес-вопрос «какая минимальная зарплата указана в вакансии», нужен именно min.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">3</span> Ширина вилки — отдельный сигнал</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Несёт ли <span class="mono">spread</span> информацию сверх уровня зарплаты, и можно ли её предсказать?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Spearman между абсолютной/относительной шириной и зарплатой; Kruskal–Wallis по периодам, уровням и типу занятости; две модели — на <span class="mono">spread_pct</span> и на <span class="mono">log1p(spread)</span> — с той же кросс-валидацией.</dd>
+
+<dt>Что получилось</dt>
+<dd>Абсолютная ширина сильно растёт с зарплатой: ρ = 0,75. Относительная — слабее: ρ = 0,24. Предсказуемость относительной ширины низкая: R² = 0,08. Различия по периоду и типу занятости статистически значимы.</dd>
+
+<dt>Как понимать</dt>
+<dd>Абсолютная ширина в основном повторяет уровень: дорогие вакансии имеют более широкие вилки просто потому, что 10 % от 200k больше, чем 10 % от 50k. Относительная ширина — уже другой смысл: насколько компания готова торговаться. Она плохо предсказывается по метаданным, но может быть полезна для построения интервалов, а не для точечного прогноза.</dd>
+
+<dt>Чему учит</dt>
+<dd>Низкий R² не всегда означает «признак бесполезен». Если задача — не предсказать число, а оценить неопределённость, слабый сигнал тоже ценен. И наоборот: высокий ρ не означает, что признак нужен в модели — он может дублировать таргет.</dd>
+</dl>
+<span class="verdict v-part">Частично подтверждена</span>
+</div>
+
+<h2 id="s7-2">7.2. Роль и уровень: гипотезы 4–7</h2>
+
+<div class="card">
+<h3><span class="num">4</span> Уровень позиции положительно влияет на зарплату</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Растёт ли зарплата при переходе entry → mid → senior → executive?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Kruskal–Wallis по <span class="mono">seniority</span> (только заполненные строки, группы от 10 наблюдений), затем парные Mann–Whitney для соседних уровней с поправкой Бонферрони. На графике — боксплоты в лог-шкале и линия общей медианы.</dd>
+
+<dt>Что получилось</dt>
+<dd>Медианы: entry 50,1k, mid 61,6k, senior 97,5k, executive 135k. Различия значимы, ε² = 0,20 — большой эффект. Пара senior–executive незначима (p = 0,12), потому что executive всего 23 наблюдения.</dd>
+
+<dt>Как понимать</dt>
+<dd>Направление и порядок уровней устойчивы. Но <span class="mono">seniority</span> заполнен лишь у 7 % вакансий, и это не случайная подвыборка: вероятно, его указывают компании с более зрелым HR-процессом. Поэтому медианы нельзя переносить на весь рынок без оговорки.</dd>
+
+<dt>Чему учит</dt>
+<dd>Значимость и размер эффекта смотрят вместе: p может быть маленьким, а эффект — ничтожным, или наоборот. И всегда проверяйте размер наименьшей группы: незначимая пара может быть просто недоисследованной, а не «одинаковой».</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">5</span> Уровень можно восстановить из <span class="mono">title</span>, несмотря на 93 % пропусков</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Можно ли предсказать seniority по названию вакансии и помогает ли это модели?</dd>
+
+<dt>Как проверяли</dt>
+<dd>TF-IDF по названиям (униграммы и биграммы) → логистическая регрессия с <span class="mono">class_weight="balanced"</span>. Стратифицированная 5-fold кросс-валидация на строках с известным уровнем. Метрики: accuracy, balanced accuracy, матрица ошибок. Затем предсказанный уровень добавлялся как признак в модель зарплаты.</dd>
+
+<dt>Что получилось</dt>
+<dd>Accuracy 0,61 против 0,44 у мажоритарного класса; balanced accuracy 0,53. Предсказанный уровень упорядочивает зарплаты: от 63k до 180k. Прирост MAE поверх семейства профессий: 37,7k → 34,6k. Но mid, senior и internship путаются часто.</dd>
+
+<dt>Как понимать</dt>
+<dd>В названиях действительно есть сигнал: слова «Senior», «Lead», «Intern» информативны. Однако 61 % точности на пяти классах — это умеренно: модель лучше случайной, но не заменяет разметку. Balanced accuracy ниже accuracy, потому что редкие классы (internship, executive) предсказываются плохо.</dd>
+
+<dt>Чему учит</dt>
+<dd>Accuracy обманчива при дисбалансе классов: всегда сравнивайте с долей мажоритарного класса и смотрите balanced accuracy и матрицу ошибок. И помните про тонкую утечку: классификатор обучался на всех размеченных строках, а затем его предсказания использовались как признак для тех же строк в кросс-валидации. Для строк с известным уровнем это оптимистично; честнее обучать классификатор внутри каждого фолда.</dd>
+</dl>
+<span class="verdict v-part">Частично подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">6</span> Семейство профессии значимо</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Различаются ли зарплаты между группами профессий, и помогает ли <span class="mono">job_family</span> модели?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Kruskal–Wallis по <span class="mono">job_family</span> (группы от 50 наблюдений), боксплоты в лог-шкале, затем добавление признака в базовую модель и сравнение MAE на общих фолдах.</dd>
+
+<dt>Что получилось</dt>
+<dd>ε² = 0,17 — большой эффект. Медианы: legal, design и engineering около 150k и выше; admin, education, customer — ниже 70k. Прирост MAE около 2,2k. При этом 34 % вакансий попали в <span class="mono">other</span>.</dd>
+
+<dt>Как понимать</dt>
+<dd>Профессия — сильный и содержательный признак. Но <span class="mono">job_family</span> — грубая эвристика по названию: она не различает грейды внутри семьи и теряет треть вакансий. Для исследовательского вывода этого достаточно, для продукта — нет.</dd>
+
+<dt>Чему учит</dt>
+<dd>Признак, собранный регуляркой, может дать реальный прирост — но качество эвристики надо измерять (доля <span class="mono">other</span>, ручная проверка примеров). Если категория «другое» слишком большая, модель теряет информацию.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">7</span> <span class="mono">department</span> полезен там, где заполнен (59 %)</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Добавляет ли подразделение компании информацию о зарплате?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Взяли строки с заполненным <span class="mono">department</span>, редкие значения (меньше 30 наблюдений) объединили в «Other», затем Kruskal–Wallis и сравнение модели с признаком и без на фолдах, построенных только по этой подвыборке.</dd>
+
+<dt>Что получилось</dt>
+<dd>Различия сильные: Engineering 185k, Product 183k, Retail 39k. Прирост MAE около 1,1k. Поле имеет 2 202 уникальных значения, заполнено у 59 %. Медиана зарплаты при пропуске 82k против 115k при заполнении.</dd>
+
+<dt>Как понимать</dt>
+<dd>Подразделение — хороший прокси функции и уровня, но только внутри компаний, где его заполняют. Пропуск связан с зарплатой, поэтому «Unknown» — не нейтральная категория, а отдельный сигнал. Редкие значения обязательно нужно группировать, иначе признак превращается в почти уникальный идентификатор.</dd>
+
+<dt>Чему учит</dt>
+<dd>Для категорий с тысячами значений нужна редкая группировка или target encoding. И нельзя оценивать пользу признака на всей выборке, если он заполнен частично: сравнение должно идти на сопоставимой подвыборке.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена (на подвыборке)</span>
+</div>
+
+<h2 id="s7-3">7.3. География и формат работы: гипотезы 8–11</h2>
+
+<div class="card">
+<h3><span class="num">8</span> <span class="mono">country_code</span> значимо влияет на зарплату</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Отличаются ли зарплаты между странами?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Kruskal–Wallis по <span class="mono">country_code</span> для стран с минимум 30 наблюдениями; боксплоты в лог-шкале; размер эффекта ε².</dd>
+
+<dt>Что получилось</dt>
+<dd>ε² = 0,09 — средний/большой эффект. США 107,5k, Германия 78,9k, Франция 40,3k, Италия 44,5k.</dd>
+
+<dt>Как понимать</dt>
+<dd>Страна — один из сильных признаков, но разрыв объясняется не только рынком. В США больше tech- и senior-вакансий, другой состав платформ, другая валюта и стоимость жизни. Это совместный сигнал «страна + роль + компания», а не чистая поправка на стоимость жизни.</dd>
+
+<dt>Чему учит</dt>
+<dd>Географический признак почти всегда коррелирует с составом выборки. Прежде чем говорить «в стране X платят больше», проверьте, не объясняется ли это профессией и уровнем. Для честного сравнения нужен контроль или сопоставление внутри одинаковых ролей.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">9</span> remote &gt; hybrid &gt; onsite</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Платят ли удалённые вакансии больше, и сохраняется ли разница после контроля на состав выборки?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Kruskal–Wallis и парные Mann–Whitney; затем две OLS-модели на лог-зарплате: без контролей и с контролем на ATS, семейство профессий, тип занятости и период. Базовая категория — onsite. Стандартные ошибки HC1. Эффект переведён в проценты: <span class="mono">exp(β) − 1</span>.</dd>
+
+<dt>Что получилось</dt>
+<dd>Сырые медианы: remote 130k, hybrid 117,6k, onsite 77k. Без контроля remote выглядит дороже на 45 %. После контроля премия падает до +5,9 % (p = 0,015), hybrid — до +3,0 % и становится незначимой (p = 0,19).</dd>
+
+<dt>Как понимать</dt>
+<dd>Почти вся исходная разница — это состав выборки: удалённые вакансии чаще встречаются в tech-компаниях, на senior-позициях и с другим типом оплаты. Сам по себе формат работы — слабый признак. Остаточные +6 % можно трактовать как «небольшая ассоциация при прочих наблюдаемых равных», но не как причинный эффект.</dd>
+
+<dt>Чему учит</dt>
+<dd>Это главный урок ноутбука про конфаундеры. Сравнение «среднее по группам» почти всегда смешано с составом групп. Контроль на наблюдаемые признаки уменьшает смещение, но не убирает его полностью. И p = 0,015 после множества проверок — хрупкое доказательство: не стройте на нём сильных утверждений.</dd>
+</dl>
+<span class="verdict v-part">Частично подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">10</span> Внутри США город и штат значимы</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Объясняет ли география внутри страны часть разброса зарплат?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Из <span class="mono">location</span> и <span class="mono">region</span> регуляркой извлекли штат, проверили покрытие. Kruskal–Wallis по штатам (от 30 наблюдений). Затем на подвыборке США сравнили модель без штата и со штатом на общих фолдах.</dd>
+
+<dt>Что получилось</dt>
+<dd>Штат извлекается для 82 % американских вакансий. ε² = 0,12. Калифорния 145k, Нью-Йорк 129k, Теннесси 58k. Прирост MAE около 0,9k.</dd>
+
+<dt>Как понимать</dt>
+<dd>Внутри страны география действительно полезна, но эффект скромнее, чем у периода или компании. Штат — прокси стоимости жизни и концентрации отраслей. Город отдельно не проверялся: значений слишком много, и шум превысил бы сигнал.</dd>
+
+<dt>Чему учит</dt>
+<dd>Признак с высоким покрытием и понятной интерпретацией стоит добавлять даже при небольшом приросте. Но не каждый уровень детализации полезен: «город» может дать сотни редких категорий и переобучение вместо знания.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">11</span> Пропуск <span class="mono">country_code</span> — сигнал, а не случайность</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Отличаются ли вакансии без страны от вакансий со страной, и является ли пропуск информативным?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Сравнили медианы и размеры групп; χ² для связи пропуска с форматом работы и ATS; Mann–Whitney внутри remote-вакансий, чтобы отделить эффект формата.</dd>
+
+<dt>Что получилось</dt>
+<dd>Медиана без страны 129k против 107,5k у США. Среди вакансий без страны 47 % remote (против 15 % со страной) и 90 % приходят через Greenhouse (против 24 %). Но внутри Greenhouse-remote медиана без страны уже ниже: 139k против 158,5k у США.</dd>
+
+<dt>Как понимать</dt>
+<dd>Пропуск — не случайное отсутствие данных, а маркер канала и формата: глобальные remote-вакансии часто публикуются без страны. «Премия за пропуск» на уровне всей выборки — артефакт состава. Внутри сопоставимой группы направление меняется.</dd>
+
+<dt>Чему учит</dt>
+<dd>Пропуск можно использовать как признак, но интерпретировать его надо через механизм возникновения. Это классический пример MNAR/MAR: отсутствие значения связано с самим объектом. И всегда проверяйте эффект внутри подгрупп — средние по всей выборке могут обманывать (парадокс Симпсона).</dd>
+</dl>
+<span class="verdict v-part">Частично подтверждена</span>
+</div>
+</div>
+
+<h2 id="s7-4">7.4. Компания и платформа: гипотезы 12–14</h2>
+
+<div class="card">
+<h3><span class="num">12</span> <span class="mono">ats</span> — сильный прокси типа компании</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Связана ли платформа публикации с зарплатой, и нужна ли она модели?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Kruskal–Wallis по <span class="mono">ats</span>; сравнение модели с ATS и без; permutation importance на hold-out 20 %: признак перемешивают и смотрят, насколько падает качество.</dd>
+
+<dt>Что получилось</dt>
+<dd>ε² = 0,14. Медианы: Ashby 151k, Greenhouse 117,5k, Workday 83k, Recruitee 51,2k. Удаление ATS ухудшает MAE на 1,1k. По permutation importance ATS — третий после периода и страны.</dd>
+
+<dt>Как понимать</dt>
+<dd>ATS не «влияет» на зарплату. Это маркер типа компании: Ashby и Greenhouse чаще выбирают стартапы и tech, Workday — крупные корпорации. Признак полезен для прогноза, но его интерпретация — «через какую платформу наняли», а не «сколько платят за платформу».</dd>
+
+<dt>Чему учит</dt>
+<dd>Permutation importance показывает вклад признака в конкретную модель, а не «истинную важность». Коррелированные признаки делят вклад: если убрать ATS, его информацию частично подхватят другие. Поэтому важность надо читать вместе с экспериментом «убрали признак — как изменилась метрика».</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">13</span> <span class="mono">company</span> / <span class="mono">company_id</span> улучшают прогноз при target encoding</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Можно ли использовать компанию как признак, если компаний почти 4 000?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Target encoding внутри каждого фолда: категория заменяется средним лог-таргетом по train, с внутренней кросс-валидацией и сглаживанием. Отдельно проверили <span class="mono">company</span> и <span class="mono">company_id</span>.</dd>
+
+<dt>Что получилось</dt>
+<dd>MAE падает с 39,9k до 37,2k для обоих вариантов — примерно на 7 %. Компаний 3 970, из них 1 274 встречаются один раз. <span class="mono">company_id</span> чуть точнее, потому что различает подразделения одной компании.</dd>
+
+<dt>Как понимать</dt>
+<dd>Компания — один из самых полезных признаков: она кодирует отрасль, размер, уровень найма и щедрость. Но именно поэтому она опасна: для редких компаний среднее по 1–2 вакансиям — это почти таргет. Сглаживание тянет такие значения к общему среднему, а внутренняя CV не даёт энкодеру подсмотреть в свой же фолд.</dd>
+
+<dt>Чему учит</dt>
+<dd>Target encoding — стандартный способ работать с высококардинальными категориями, но только с тремя предосторожностями: обучение внутри train, сглаживание редких категорий и запасное значение для новых. Без них метрика будет красивой, а модель — бесполезной.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">14</span> <span class="mono">salary_source</span> — признак качества данных, а не рынка</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Означает ли разница между зарплатами «из ATS» и «из описания» реальную рыночную разницу?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Медианы по источнику; χ² связи источника с ATS; две OLS-модели: без контролей и с контролем на ATS и период; доля выбросов по источнику.</dd>
+
+<dt>Что получилось</dt>
+<dd>Без контроля <span class="mono">description</span> выглядит на 14 % дешевле <span class="mono">ats</span>. После контроля эффект исчезает: −1,3 %, p = 0,40. Источник почти детерминирован платформой: Workday — 100 % из описания, Greenhouse — 56 %, Ashby — 23 %. В ats-выборке больше выбросов: 4,4 % против 2,8 %.</dd>
+
+<dt>Как понимать</dt>
+<dd>Это не рыночный сигнал, а след способа сбора: разные платформы по-разному отдают зарплату. Признак полезен для диагностики качества и для понимания, откуда взялись числа, но интерпретировать его как «зарплата из описания ниже» нельзя.</dd>
+
+<dt>Чему учит</dt>
+<dd>Прежде чем радоваться значимому признаку, спросите: «а не является ли он артефактом пайплайна?». Переменные источника, версии парсера, даты выгрузки часто объясняют больше, чем рынок. Их место — в мониторинге качества, а не в объяснении зарплат.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<h2 id="s7-5">7.5. Занятость и период: гипотезы 15–17</h2>
+
+<div class="card">
+<h3><span class="num">15</span> <span class="mono">employment_type</span> значим</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Отличаются ли зарплаты между полной, частичной занятостью, контрактом и временной работой?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Kruskal–Wallis, парные Mann–Whitney, сравнение модели с признаком и без него.</dd>
+
+<dt>Что получилось</dt>
+<dd>ε² = 0,09. Медианы: full-time 100k, contract 81k, temporary 57,2k, part-time 42,1k. Прирост MAE небольшой — около 0,3k.</dd>
+
+<dt>Как понимать</dt>
+<dd>Различия значимы и содержательны, но после учёта периода и ATS вклад почти исчезает: тип занятости сильно коррелирует с почасовой оплатой и платформой. Это типичный случай «значимо, но избыточно».</dd>
+
+<dt>Чему учит</dt>
+<dd>Статистическая значимость не гарантирует прироста в модели. Если признак дублирует другой, его вклад может быть близок к нулю. Проверяйте incremental value, а не только p-value.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена (слабый прирост)</span>
+</div>
+
+<div class="card">
+<h3><span class="num">16</span> Исходный <span class="mono">salary_period</span> — информативный признак</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Нужно ли сохранять исходный период оплаты, если все суммы уже приведены к году?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Kruskal–Wallis по <span class="mono">raw_period</span>; модель без этого признака; анализ состава по типу занятости.</dd>
+
+<dt>Что получилось</dt>
+<dd>ε² = 0,33 — самый большой эффект среди категориальных признаков. Без <span class="mono">raw_period</span> MAE растёт с 39,9k до 46,6k. При этом <span class="mono">hour</span> — это в основном почасовые и частичные роли (53 % full-time, 17 % part-time, 21 % без типа занятости), а <span class="mono">year</span> — офисные.</dd>
+
+<dt>Как понимать</dt>
+<dd>Период — не просто единица измерения. Он кодирует формат оплаты и тип роли: почасовая работа часто ниже по годовой сумме, но это другой механизм. Поэтому после нормализации признак не выбрасывают — он остаётся полезным.</dd>
+
+<dt>Чему учит</dt>
+<dd>При приведении единиц измерения не удаляйте исходную единицу: она может нести информацию о процессе. Но интерпретируйте её как «формат оплаты + тип роли», а не как «рыночную ставку». И помните, что коэффициенты пересчёта (2 080 часов) — это допущение.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">17</span> Ошибки нормализации периода ухудшают модель</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Что делать со строками, где сумма выглядит выбросом, а период не годовой?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Определили 42 подозрительные строки. Сравнили три варианта обучения: (A) на всех строках, (B) без подозрительных, (C) на всех плюс флаг <span class="mono">period_suspect</span>. Оценка — MAE на чистых тестовых строках и отдельно на подозрительных.</dd>
+
+<dt>Что получилось</dt>
+<dd>Подозрительных строк 0,5 %, но средняя зарплата у них 631k против 114k, а ошибка модели — около 500k. Исключение из обучения улучшает MAE на чистых данных всего на ~0,3k (0,8 %); флаг даёт примерно тот же эффект.</dd>
+
+<dt>Как понимать</dt>
+<dd>Даже грубая ошибка в 0,5 % строк почти не двигает среднюю метрику, потому что её вклад мал. Но если смотреть на этих клиентов отдельно, ошибка катастрофическая. Поэтому чистка важна локально, а не как способ улучшить общий MAE.</dd>
+
+<dt>Чему учит</dt>
+<dd>Оценивайте модель не только по среднему: смотрите на хвосты и подгруппы. И помните, что флаг <span class="mono">period_suspect</span> построен по <span class="mono">salary_min/max</span> — в «холодном» прогнозе, где зарплата неизвестна, его не будет. Это диагностический признак, а не продакшн-фича.</dd>
+</dl>
+<span class="verdict v-part">Частично подтверждена</span>
+</div>
+
+<h2 id="s7-6">7.6. Текст и пропуски: гипотезы 18–19</h2>
+
+<div class="card">
+<h3><span class="num">18</span> <span class="mono">description</span> содержит сигнал о зарплате</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Можно ли предсказывать зарплату по тексту описания, и не является ли это подглядыванием в ответ?</dd>
+
+<dt>Как проверяли</dt>
+<dd>TF-IDF (до 20 000 признаков, униграммы и биграммы, <span class="mono">min_df=3</span>, <span class="mono">sublinear_tf</span>, английские стоп-слова) → Ridge. Четыре варианта: только метаданные, сырой текст, текст с замаскированными денежными упоминаниями, метаданные + текст. Оценка — та же 5-fold CV.</dd>
+
+<dt>Что получилось</dt>
+<dd>MAE: метаданные 40,6k, сырой текст 27,1k, очищенный текст 27,7k, совместная модель 25,7k. 87 % описаний содержат явные суммы. Длина описания сама по себе слабая: ρ = 0,27 и прироста не даёт.</dd>
+
+<dt>Как понимать</dt>
+<dd>Текст — самый сильный источник сигнала: он описывает стек, обязанности, уровень и культуру. Но сырой текст частично содержит саму зарплату, поэтому метрика завышена. После маскировки денежных паттернов качество почти не падает — значит, полезный сигнал о роли остаётся. Это ключевой аргумент, что текст работает не только за счёт утечки.</dd>
+
+<dt>Чему учит</dt>
+<dd>Для текста обязательна проверка на утечку: суммы, диапазоны, «competitive salary», дубликаты вакансий. Очистка регулярками не идеальна, поэтому вывод «подтверждена с оговоркой» честнее, чем «текст даёт 25,7k». И ещё: случайная CV на текстах одной компании может завышать качество из-за почти одинаковых описаний.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена (с оговоркой об утечке)</span>
+</div>
+
+<div class="card">
+<h3><span class="num">19</span> Факт пропуска — сам по себе признак</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Помогают ли модели индикаторы «здесь нет данных»?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Для каждого из восьми полей сравнили медианы зарплат при наличии и отсутствии значения (Mann–Whitney). Затем добавили все <span class="mono">is_missing_*</span> к базовой модели и сравнили MAE.</dd>
+
+<dt>Что получилось</dt>
+<dd>Описательно пропуски очень информативны: без <span class="mono">seniority</span> медиана в 1,61 раза выше, без <span class="mono">department</span> — в 0,71 раза, без <span class="mono">country_code</span> — в 1,35 раза; все p &lt; 1e−28. Но прирост MAE отрицательный: −42 доллара. Индикаторы коррелируют друг с другом.</dd>
+
+<dt>Как понимать</dt>
+<dd>Информация о пропуске уже присутствует в базовых признаках: пропущенная категория закодирована как «Unknown». Добавление отдельных флагов дублирует её и не помогает. Это не значит, что пропуски не важны — значит, что их нужно правильно кодировать, а не добавлять вслепую.</dd>
+
+<dt>Чему учит</dt>
+<dd>Проверяйте, не дублирует ли новый признак уже существующий. И различайте описательную информативность и incremental value: первое — про структуру данных, второе — про пользу в модели. Отрицательный прирост вполне возможен из-за шума и переобучения.</dd>
+</dl>
+<span class="verdict v-part">Частично подтверждена</span>
+</div>
+
+<h2 id="s7-7">7.7. Служебные признаки: гипотезы 20–21</h2>
+
+<div class="card">
+<h3><span class="num">20</span> <span class="mono">salary_min</span> — самый сильный предиктор <span class="mono">salary_max</span></h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Насколько хорошо нижняя граница вилки предсказывает верхнюю?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Две модели на лог-шкале: без <span class="mono">salary_min_usd</span> и с ним. Плюс permutation importance на hold-out.</dd>
+
+<dt>Что получилось</dt>
+<dd>MAE падает с 47,2k до 17,4k; R² растёт с 0,47 до 0,92. Важность <span class="mono">salary_min</span> более чем в 10 раз выше остальных признаков.</dd>
+
+<dt>Как понимать</dt>
+<dd>Результат почти тривиален: границы одной вилки связаны. Но это не «признак, который улучшает прогноз», а утечка: в момент холодного прогноза нижней границы у нас нет. Практическая польза — восстановление интервалов, когда одна граница известна (например, кандидат назвал ожидания).</dd>
+
+<dt>Чему учит</dt>
+<dd>Самый сильный предиктор может быть самым бесполезным в продакшене. Всегда спрашивайте: «будет ли это значение доступно в момент предсказания?». Если нет — это не признак, а ответ.</dd>
+</dl>
+<span class="verdict v-yes">Подтверждена</span>
+</div>
+
+<div class="card">
+<h3><span class="num">21</span> Даты дают слабый, но проверяемый сигнал</h3>
+<dl>
+<dt>Вопрос</dt>
+<dd>Есть ли сезонность, эффект дня недели, часа публикации или задержки сбора?</dd>
+
+<dt>Как проверяли</dt>
+<dd>Spearman для lag и «давности»; Kruskal–Wallis по дню недели и часу; модель с добавлением четырёх временных признаков.</dd>
+
+<dt>Что получилось</dt>
+<dd>Все вакансии опубликованы в одну неделю: 5–12 октября 2026. День недели формально значим (p = 0,008), но эффект держится на ~200 выходных вакансиях. Час значим (p &lt; 1e−100), но 96 % вакансий в 00:00 — это Workday с более низкими зарплатами. Добавление дат ухудшает MAE на 0,3k.</dd>
+
+<dt>Как понимать</dt>
+<dd>Сезонность проверить невозможно: нет нескольких циклов. «Час публикации» — артефакт источника, а не поведение рынка. День недели — слабый и хрупкий эффект. Для прогноза даты бесполезны; для анализа сезонности нужен длинный период.</dd>
+
+<dt>Чему учит</dt>
+<dd>Временные признаки легко поймать как артефакт сбора. Если все записи появились в один час, признак «час» будет сильным, но бессмысленным. И для сезонности нужно как минимум несколько лет, а не одна неделя.</dd>
+</dl>
+<span class="verdict v-no">Не подтверждена</span>
+</div>
+</div>
+
+<!-- ================= 8 ================= -->
+<div class="part">
+<h1 id="s8">8. Итоги: что действительно работает</h1>
+
+<p class="lead">Из 21 гипотезы 14 подтвердились полностью или с оговоркой, 6 — частично, 1 — не подтвердилась. Но главный результат ноутбука не в счёте, а в разделении «статистически значимо» и «полезно для прогноза».</p>
+
+<div class="kpi-row">
+  <div class="kpi"><b>39,9k</b>MAE базовой модели, $</div>
+  <div class="kpi"><b>25,7k</b>MAE метаданные + очищенный текст, $</div>
+  <div class="kpi"><b>0,33</b>ε² исходного периода — максимум</div>
+  <div class="kpi"><b>14 / 6 / 1</b>подтверждена / частично / нет</div>
+</div>
+
+<h2>8.1. Сводная таблица</h2>
+<table>
+  <thead><tr><th style="width:5%">№</th><th style="width:34%">Гипотеза</th><th style="width:36%">Проверка</th><th>Вывод</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Логарифм зарплаты как таргет</td><td>skew, Jarque–Bera, CV raw/log</td><td>Подтверждена (с оговоркой)</td></tr>
+    <tr><td>2</td><td>Один таргет — середина вилки</td><td>Pearson/Spearman, CV min/mid/max</td><td>Подтверждена</td></tr>
+    <tr><td>3</td><td>Ширина вилки — отдельный сигнал</td><td>Spearman, Kruskal–Wallis, CV</td><td>Частично</td></tr>
+    <tr><td>4</td><td>Уровень позиции влияет на зарплату</td><td>Kruskal–Wallis, Mann–Whitney</td><td>Подтверждена</td></tr>
+    <tr><td>5</td><td>Уровень восстанавливается из title</td><td>TF-IDF + LogReg, прирост MAE</td><td>Частично</td></tr>
+    <tr><td>6</td><td>Семейство профессии значимо</td><td>Kruskal–Wallis, CV</td><td>Подтверждена</td></tr>
+    <tr><td>7</td><td>department полезен там, где заполнен</td><td>Kruskal–Wallis, CV на подвыборке</td><td>Подтверждена (на подвыборке)</td></tr>
+    <tr><td>8</td><td>Страна влияет на зарплату</td><td>Kruskal–Wallis</td><td>Подтверждена</td></tr>
+    <tr><td>9</td><td>remote &gt; hybrid &gt; onsite</td><td>тесты + OLS с контролем</td><td>Частично</td></tr>
+    <tr><td>10</td><td>Штат/город внутри США значимы</td><td>Kruskal–Wallis, CV</td><td>Подтверждена</td></tr>
+    <tr><td>11</td><td>Пропуск country_code — сигнал</td><td>медианы, χ², Mann–Whitney</td><td>Частично</td></tr>
+    <tr><td>12</td><td>ats — прокси типа компании</td><td>Kruskal–Wallis, CV, permutation</td><td>Подтверждена</td></tr>
+    <tr><td>13</td><td>company/company_id полезны</td><td>target encoding внутри CV</td><td>Подтверждена</td></tr>
+    <tr><td>14</td><td>salary_source — качество данных</td><td>χ², OLS до/после контроля</td><td>Подтверждена</td></tr>
+    <tr><td>15</td><td>employment_type значим</td><td>Kruskal–Wallis, CV</td><td>Подтверждена (слабый прирост)</td></tr>
+    <tr><td>16</td><td>Исходный период информативен</td><td>Kruskal–Wallis, CV</td><td>Подтверждена</td></tr>
+    <tr><td>17</td><td>Ошибки периода ухудшают модель</td><td>CV: все / без / с флагом</td><td>Частично</td></tr>
+    <tr><td>18</td><td>description содержит сигнал</td><td>TF-IDF + Ridge, очистка</td><td>Подтверждена (с оговоркой)</td></tr>
+    <tr><td>19</td><td>Факт пропуска — признак</td><td>Mann–Whitney, CV с флагами</td><td>Частично</td></tr>
+    <tr><td>20</td><td>salary_min — предиктор salary_max</td><td>CV, permutation importance</td><td>Подтверждена</td></tr>
+    <tr><td>21</td><td>Даты дают слабый сигнал</td><td>Spearman, Kruskal–Wallis, CV</td><td>Не подтверждена</td></tr>
+  </tbody>
+</table>
+
+<h2>8.2. Рейтинг по пользе для модели</h2>
+<p>Приросты MAE относительно базовой модели (39,9k). Разные гипотезы добавляют признаки к разным базовым наборам, поэтому сравнивать их между собой можно только как ориентир.</p>
+<table>
+  <thead><tr><th style="width:44%">Что добавлено</th><th style="width:18%">Прирост MAE</th><th>Комментарий</th></tr></thead>
+  <tbody>
+    <tr><td>Исходный <span class="mono">salary_period</span></td><td>+6,6k</td><td>Самый сильный категориальный признак, но это формат оплаты и тип роли</td></tr>
+    <tr><td>Target encoding компании</td><td>+2,7k</td><td>Требует аккуратной кросс-валидации и сглаживания</td></tr>
+    <tr><td><span class="mono">job_family</span></td><td>+2,2k</td><td>Эвристика по title; 34 % в «other»</td></tr>
+    <tr><td><span class="mono">seniority_pred</span> поверх <span class="mono">job_family</span></td><td>+3,1k</td><td>37,7k → 34,6k; есть тонкая утечка при обучении классификатора</td></tr>
+    <tr><td><span class="mono">ats</span></td><td>+1,1k</td><td>Прокси типа компании, не причина</td></tr>
+    <tr><td><span class="mono">department</span></td><td>+1,1k</td><td>Только на подвыборке с заполненным полем</td></tr>
+    <tr><td>Штат США</td><td>+0,9k</td><td>Покрытие 82 % американских вакансий</td></tr>
+    <tr><td><span class="mono">employment_type</span></td><td>+0,3k</td><td>Значим, но во многом дублирует период</td></tr>
+    <tr><td>Даты</td><td>−0,3k</td><td>Ухудшают модель</td></tr>
+    <tr><td>Флаги пропусков</td><td>−42 $</td><td>Дублируют категорию «Unknown»</td></tr>
+    <tr><td>Описание (очищенное) вместо метаданных</td><td>−13,5k (MAE)</td><td>Другой класс модели, поэтому сравнимо только качественно</td></tr>
+  </tbody>
+</table>
+
+<h2>8.3. Рекомендуемый набор признаков</h2>
+<p>Для «холодного» прогноза, когда зарплата вакансии неизвестна:</p>
+<ul>
+  <li><span class="mono">raw_period</span>, <span class="mono">ats</span>, <span class="mono">country_code</span>, <span class="mono">state_model</span>, <span class="mono">employment_type</span>, <span class="mono">workplace_type</span>;</li>
+  <li><span class="mono">job_family</span>, <span class="mono">seniority_pred</span>, <span class="mono">dept_group</span>;</li>
+  <li>target encoding <span class="mono">company</span> / <span class="mono">company_id</span> — только внутри train-фолдов;</li>
+  <li>очищенный от денежных упоминаний текст описания (TF-IDF или эмбеддинги);</li>
+  <li>флаг <span class="mono">period_suspect</span> — только для диагностики.</li>
+</ul>
+<p>Не включать в холодный прогноз <span class="mono">salary_min</span> и <span class="mono">salary_max</span>: они дают «идеальные» метрики, но это утечка. Их место — восстановление интервалов, когда одна из границ уже известна.</p>
+
+<h2>8.4. Ограничения</h2>
+<ul>
+  <li>Данные наблюдательные и только по вакансиям с указанной зарплатой — selection bias.</li>
+  <li>Одна неделя наблюдения: сезонность и тренды не проверить.</li>
+  <li>Курсы валют зафиксированы на одну дату; пересчёт периода использует стандартные 2 080 часов и 260 дней.</li>
+  <li>Множественные проверки: p-value — ориентир, а не окончательное доказательство.</li>
+  <li>Семейства профессий и штаты извлечены эвристиками; seniority заполнен у 7 %.</li>
+  <li>Случайная кросс-валидация, а не временная; возможны дубликаты вакансий и компаний между фолдами.</li>
+</ul>
+
+<h2>8.5. Что делать дальше</h2>
+<ol>
+  <li>Собрать более длинную историю и проверить сезонность/тренды на временном hold-out.</li>
+  <li>Заменить эвристики <span class="mono">job_family</span> и <span class="mono">seniority</span> на обучаемые модели по title/description.</li>
+  <li>Добавить эмбеддинги описания и попробовать градиентный бустинг поверх них.</li>
+  <li>Перейти от точечного прогноза к квантильной регрессии — для вилки и интервалов.</li>
+  <li>Отдельно моделировать почасовые и part-time вакансии: у них другой механизм формирования зарплаты.</li>
+</ol>
+</div>
+
+<!-- ================= 9 ================= -->
+<div class="part">
+<h1 id="s9">9. Как применять это на практике</h1>
+
+<p class="lead">Ноутбук — это шаблон исследования. Его можно переиспользовать на других данных: важно не копировать код, а повторять последовательность решений.</p>
+
+<h2 id="s9-1">9.1. Алгоритм проверки своей гипотезы</h2>
+<ol>
+  <li><b>Сформулируйте утверждение.</b> Не «интересно, влияет ли страна», а «медианная зарплата в США выше, чем в Германии».</li>
+  <li><b>Определите единицу наблюдения и таргет.</b> Одна строка — одна вакансия; таргет — середина вилки в долларах в год.</li>
+  <li><b>Очистите данные до анализа.</b> Приведите единицы, определите пропуски, зафиксируйте правила. Не подгоняйте правила под желаемый результат.</li>
+  <li><b>Посмотрите на данные глазами.</b> Медианы, размеры групп, боксплоты. Это подскажет, какой тест уместен и нет ли выбросов.</li>
+  <li><b>Проверьте предположения теста.</b> Нормальность, равенство дисперсий, независимость. Если они нарушены — берите ранговый тест.</li>
+  <li><b>Посчитайте p-value и размер эффекта.</b> Одно без другого не читается.</li>
+  <li><b>Проверьте устойчивость.</b> Разбейте данные иначе, уберите выбросы, посмотрите подгруппы. Если вывод меняется — он хрупкий.</li>
+  <li><b>Проверьте пользу для модели.</b> Добавьте признак и сравните MAE на одних и тех же фолдах.</li>
+  <li><b>Сформулируйте вывод с ограничениями.</b> «Связано», а не «влияет»; «среди вакансий с указанной зарплатой», а не «на рынке».</li>
+  <li><b>Запишите результат в журнал.</b> Номер, метод, число, вердикт. Как <span class="mono">add_summary</span> в ноутбуке.</li>
+</ol>
+
+<h2 id="s9-2">9.2. Чек-лист перед публикацией вывода</h2>
+<table>
+  <thead><tr><th style="width:52%">Проверка</th><th>Почему это важно</th></tr></thead>
+  <tbody>
+    <tr><td>Гипотеза сформулирована до анализа?</td><td>Иначе это post-hoc объяснение, а не проверка</td></tr>
+    <tr><td>Есть H₀ и H₁ в явном виде?</td><td>Без них p-value не имеет смысла</td></tr>
+    <tr><td>Указан размер каждой группы?</td><td>Маленькие группы дают нестабильные оценки</td></tr>
+    <tr><td>Указан размер эффекта?</td><td>Значимость не говорит о величине</td></tr>
+    <tr><td>Учтены множественные сравнения?</td><td>Иначе 5 % «находок» — случайность</td></tr>
+    <tr><td>Проверены конфаундеры?</td><td>Разница может быть составом выборки</td></tr>
+    <tr><td>Нет утечки из таргета?</td><td>Иначе метрика красивая, а модель бесполезна</td></tr>
+    <tr><td>Метрика сравнивается на одних фолдах?</td><td>Иначе разница — шум разбиения</td></tr>
+    <tr><td>Вывод сформулирован без причинности?</td><td>Наблюдательные данные не доказывают причину</td></tr>
+    <tr><td>Ограничения названы явно?</td><td>Честность важнее уверенного тона</td></tr>
+  </tbody>
+</table>
+
+<h2 id="s9-3">9.3. Десять типичных ошибок</h2>
+
+<h3>1. «p &lt; 0,05 — значит, гипотеза доказана»</h3>
+<p>p-value — вероятность данных при H₀, а не вероятность H₀. И оно ничего не говорит о величине эффекта. Смотрите на медианы, проценты, ε² и прирост MAE.</p>
+
+<h3>2. Сравнивать средние на скошенных данных</h3>
+<p>Один выброс в 600k сдвигает среднее и создаёт ложное впечатление. Для зарплат используйте медианы и ранговые тесты.</p>
+
+<h3>3. Игнорировать размер группы</h3>
+<p>Разница между группами 5 и 10 000 наблюдений может быть «значимой» только за счёт большой группы. И наоборот: незначимость на 23 наблюдениях — не доказательство равенства.</p>
+
+<h3>4. Делать десятки проверок без поправки</h3>
+<p>21 гипотеза и десятки парных тестов — почти гарантия ложных находок. Используйте Бонферрони или FDR и называйте анализ исследовательским.</p>
+
+<h3>5. Путать корреляцию с причинностью</h3>
+<p>«Remote дороже» может означать «в remote больше senior-вакансий». Контроль на наблюдаемые признаки помогает, но не доказывает причину.</p>
+
+<h3>6. Считать feature importance «истинной важностью»</h3>
+<p>Permutation importance зависит от модели и коррелированных признаков. Она отвечает на вопрос «что важно этой модели», а не «что важно миру».</p>
+
+<h3>7. Допускать утечку через target encoding</h3>
+<p>Кодирование по всей таблице, а потом разбиение — классическая ошибка. Энкодер обучается только на train-фолде, с внутренней CV и сглаживанием.</p>
+
+<h3>8. Использовать <span class="mono">salary_min</span> для прогноза <span class="mono">salary_max</span></h3>
+<p>Это не прогноз, а восстановление одной части вилки по другой. В холодном сценарии такой признак недоступен.</p>
+
+<h3>9. Верить текстовой модели без проверки на утечку</h3>
+<p>87 % описаний содержат суммы. Маскируйте деньги и проверяйте, остаётся ли сигнал; следите за дубликатами вакансий.</p>
+
+<h3>10. Оценивать только средний MAE</h3>
+<p>Средняя ошибка скрывает хвосты. Строки с ошибкой периода — 0,5 % данных, но ошибка на них около 500k. Смотрите распределение ошибок и подгруппы.</p>
+
+<h2 id="s9-4">9.4. Вопросы и ответы</h2>
+
+<h3>Почему не использовать обычный t-тест?</h3>
+<p>Из-за скошенности, выбросов и разной дисперсии. Ранговые тесты устойчивее и не требуют нормальности. Если данных много, t-тест тоже даст результат, но медианы и Kruskal–Wallis лучше описывают зарплаты.</p>
+
+<h3>Почему таргет — середина вилки, а не конкретная зарплата?</h3>
+<p>Конкретной зарплаты в данных нет: есть только вилка. Середина — компромисс, который не занижен и не завышен. Если бизнес-вопрос требует min или max, нужно моделировать именно их.</p>
+
+<h3>Почему логарифм, если MAE в долларах всё равно считается?</h3>
+<p>Модель обучается на логе, потому что относительные ошибки важнее абсолютных и распределение симметричнее. Метрику потом возвращают в доллары через <span class="mono">expm1</span>, чтобы её можно было объяснить бизнесу.</p>
+
+<h3>Что такое ε² и чем он лучше p-value?</h3>
+<p>ε² — доля вариации, объяснённая группами, нормированная на размер выборки. Он не растёт автоматически с n, поэтому позволяет сравнивать эффекты между признаками: 0,01 — мало, 0,06 — средне, 0,14 — много.</p>
+
+<h3>Почему прирост MAE может быть отрицательным?</h3>
+<p>Признак добавляет шум, дублирует существующий или провоцирует переобучение. Это нормальный результат: не каждый значимый признак полезен.</p>
+
+<h3>Можно ли использовать <span class="mono">company</span> в модели, если компаний 4 000?</h3>
+<p>Да, через target encoding с обучением внутри train, сглаживанием и запасным значением для новых компаний. One-hot на 4 000 категорий создаст разреженную и нестабильную матрицу.</p>
+
+<h3>Почему описание даёт такой большой выигрыш?</h3>
+<p>Оно содержит стек, обязанности, уровень и контекст роли. Но часть выигрыша — утечка из явных сумм. После маскировки сигнал остаётся, хотя метрика становится чуть хуже.</p>
+
+<h3>Можно ли доверять выводу про remote?</h3>
+<p>Как описательной ассоциации — да, с оговоркой. Как причинному утверждению — нет: остаются ненаблюдаемые различия компаний и вакансий. И p = 0,015 после множества проверок хрупок.</p>
+</div>
+
+<!-- ================= 10 ================= -->
+<div class="part">
+<h1 id="s10">10. Словарь терминов</h1>
+
+<table>
+  <thead><tr><th style="width:24%">Термин</th><th>Простое объяснение</th></tr></thead>
+  <tbody>
+    <tr><td><b>Генеральная совокупность</b></td><td>Все объекты, о которых мы хотим сделать вывод. Здесь — все вакансии с раскрытой зарплатой.</td></tr>
+    <tr><td><b>Выборка</b></td><td>То, что у нас есть: 9 173 строки. По ней мы судим о совокупности.</td></tr>
+    <tr><td><b>H₀ / H₁</b></td><td>Нулевая гипотеза («различий нет») и альтернативная («различия есть»).</td></tr>
+    <tr><td><b>p-value</b></td><td>Вероятность увидеть такие данные (или более экстремальные), если H₀ верна. Не вероятность H₀.</td></tr>
+    <tr><td><b>α (уровень значимости)</b></td><td>Порог, ниже которого отвергаем H₀. Обычно 0,05.</td></tr>
+    <tr><td><b>Ошибка I рода</b></td><td>Ложноположительный результат: различий нет, а мы их «нашли».</td></tr>
+    <tr><td><b>Ошибка II рода</b></td><td>Пропустили реальный эффект: различия есть, а тест их не увидел.</td></tr>
+    <tr><td><b>Мощность</b></td><td>Вероятность обнаружить эффект, если он есть. Растёт с размером выборки и величиной эффекта.</td></tr>
+    <tr><td><b>Непараметрический тест</b></td><td>Тест, не требующий нормальности; часто работает с рангами.</td></tr>
+    <tr><td><b>Kruskal–Wallis</b></td><td>Непараметрический аналог ANOVA для 3+ групп: «есть ли сдвиг хотя бы в одной».</td></tr>
+    <tr><td><b>Mann–Whitney U</b></td><td>Непараметрическое сравнение двух групп по рангам.</td></tr>
+    <tr><td><b>χ² (хи-квадрат)</b></td><td>Тест связи двух категориальных переменных.</td></tr>
+    <tr><td><b>Размер эффекта</b></td><td>Насколько различие велико в содержательных единицах: ε², r, проценты, доллары.</td></tr>
+    <tr><td><b>ε² (эпсилон-квадрат)</b></td><td>Доля объяснённой вариации для Kruskal–Wallis; 0,01 / 0,06 / 0,14 — мало / средне / много.</td></tr>
+    <tr><td><b>Множественные сравнения</b></td><td>Много проверок на одних данных → растёт риск ложных находок. Лечится Бонферрони или FDR.</td></tr>
+    <tr><td><b>Кросс-валидация</b></td><td>Многократное деление данных на train/test, чтобы оценить модель устойчиво.</td></tr>
+    <tr><td><b>Out-of-fold предсказание</b></td><td>Предсказание для строки моделью, которая её не видела.</td></tr>
+    <tr><td><b>Утечка (leakage)</b></td><td>В признаки попала информация о таргете или из будущего. Метрики становятся слишком хорошими.</td></tr>
+    <tr><td><b>MAE</b></td><td>Средняя абсолютная ошибка: «в среднем ошибаемся на N долларов».</td></tr>
+    <tr><td><b>RMSLE</b></td><td>Ошибка в лог-шкале: чувствительна к относительным, а не абсолютным отклонениям.</td></tr>
+    <tr><td><b>R²</b></td><td>Доля дисперсии таргета, объяснённая моделью. Сравнивать только в одной шкале.</td></tr>
+    <tr><td><b>skew (асимметрия)</b></td><td>Мера скошенности распределения. 0 — симметрично, &gt; 0 — хвост справа.</td></tr>
+    <tr><td><b>Jarque–Bera</b></td><td>Тест на нормальность через асимметрию и эксцесс.</td></tr>
+    <tr><td><b>QQ-plot</b></td><td>График: квантили данных против квантилей нормального распределения. Прямая линия — похоже на нормальное.</td></tr>
+    <tr><td><b>IQR / правило Тьюки</b></td><td>Межквартильный размах; границы Q1 − 1,5·IQR и Q3 + 1,5·IQR для поиска выбросов.</td></tr>
+    <tr><td><b>Конфаундер</b></td><td>Третий фактор, который влияет и на признак, и на таргет и создаёт ложную связь.</td></tr>
+    <tr><td><b>Target encoding</b></td><td>Замена категории средним таргетом по ней; требует обучения внутри train и сглаживания.</td></tr>
+    <tr><td><b>TF-IDF</b></td><td>Превращение текста в числа: важность слова = частота в документе × редкость во всём корпусе.</td></tr>
+    <tr><td><b>Ridge</b></td><td>Линейная регрессия с L2-штрафом: уменьшает переобучение, особенно на тексте.</td></tr>
+    <tr><td><b>Permutation importance</b></td><td>Важность признака: перемешиваем его значения и смотрим, насколько упало качество.</td></tr>
+    <tr><td><b>Градиентный бустинг</b></td><td>Ансамбль деревьев, где каждое следующее исправляет ошибки предыдущих.</td></tr>
+    <tr><td><b>Смещение выборки</b></td><td>Данные не отражают совокупность: например, только вакансии с указанной зарплатой.</td></tr>
+    <tr><td><b>MNAR / MAR / MCAR</b></td><td>Типы пропусков: связан с самим значением / с другими признаками / ни с чем.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ================= APPENDIX ================= -->
+<div class="part partbreak">
+<h1 id="sa">Приложение. Формулы и шпаргалка по коду</h1>
+
+<h2>A.1. Формулы</h2>
+<table>
+  <thead><tr><th style="width:26%">Величина</th><th>Формула / правило</th></tr></thead>
+  <tbody>
+    <tr><td>Середина вилки</td><td><span class="mono">(salary_min_usd + salary_max_usd) / 2</span></td></tr>
+    <tr><td>Приведение к году</td><td><span class="mono">сумма × коэффициент_периода / курс_валюты</span></td></tr>
+    <tr><td>Логарифм таргета</td><td><span class="mono">log1p(x) = ln(1 + x)</span>; обратно <span class="mono">expm1(z) = e^z − 1</span></td></tr>
+    <tr><td>Границы Тьюки</td><td><span class="mono">Q1 − 1,5·IQR</span> и <span class="mono">Q3 + 1,5·IQR</span>, где <span class="mono">IQR = Q3 − Q1</span></td></tr>
+    <tr><td>ε²</td><td><span class="mono">(H − k + 1) / (n − k)</span></td></tr>
+    <tr><td>Перевод β в проценты</td><td><span class="mono">(exp(β) − 1) × 100</span></td></tr>
+    <tr><td>MAE</td><td><span class="mono">(1/n) · Σ |yᵢ − ŷᵢ|</span></td></tr>
+    <tr><td>RMSE</td><td><span class="mono">sqrt((1/n) · Σ (yᵢ − ŷᵢ)²)</span></td></tr>
+    <tr><td>RMSLE</td><td><span class="mono">sqrt((1/n) · Σ (log1p(yᵢ) − log1p(ŷᵢ))²)</span></td></tr>
+    <tr><td>R²</td><td><span class="mono">1 − SS_res / SS_tot</span></td></tr>
+    <tr><td>Бонферрони</td><td><span class="mono">p_adj = min(1, p × m)</span>, где m — число проверок</td></tr>
+    <tr><td>Target encoding со сглаживанием</td><td><span class="mono">(n·mean_category + m·global_mean) / (n + m)</span>, m — сила сглаживания</td></tr>
+  </tbody>
+</table>
+
+<h2>A.2. Мини-шаблон проверки гипотезы</h2>
+<pre><code>from scipy import stats
+import numpy as np
+
+# 1. Подготовка
+sub = df[df["workplace_type"].isin(["remote", "onsite"])].dropna(subset=["salary_mid"])
+
+# 2. Описательная статистика
+print(sub.groupby("workplace_type")["salary_mid"].agg(["median", "size"]))
+
+# 3. Тест на различия (2 группы)
+x = sub.loc[sub.workplace_type == "remote", "salary_mid"]
+y = sub.loc[sub.workplace_type == "onsite", "salary_mid"]
+u, p = stats.mannwhitneyu(x, y)
+print(f"U = {u:.0f}, p = {p:.4f}")
+
+# 4. Размер эффекта: разница медиан и процент
+med_x, med_y = x.median(), y.median()
+print(f"Медианы: {med_x:,.0f} vs {med_y:,.0f}; разница {(med_x/med_y - 1)*100:.1f}%")
+
+# 5. Проверка на модели (общие фолды!)
+pred_with = cv_predict(df[BASE], df.log_salary,
+                       extra={"workplace_type": df["workplace_type"]})
+mae_with = mean_absolute_error(df.salary_mid, np.expm1(pred_with))
+print(f"MAE без/с признаком: {BASE_METRICS['MAE, $']:,} / {mae_with:,.0f}")</code></pre>
+
+<h2>A.3. Шаблон Kruskal–Wallis</h2>
+<pre><code>res = kruskal_table(df, "salary_mid", "job_family", min_n=50)
+print(f"H = {res['H']:.1f}, p = {pfmt(res['p'])}, eps2 = {res['eps2']:.2f}")
+display(res["table"])
+
+# Пост-хок: только для заранее выбранных пар, с поправкой
+pairs = [("engineering", "sales"), ("engineering", "admin")]
+display(pairwise_mw(df, "salary_mid", "job_family", pairs).round(3))</code></pre>
+
+<h2>A.4. Шаблон target encoding</h2>
+<pre><code># Внутри каждого фолда: fit только на train, transform на test
+pred = cv_predict_target_encoding(df[BASE], df.log_salary, "company")
+
+# Никогда так не делать:
+# df["company_mean"] = df.groupby("company")["log_salary"].transform("mean")
+# Это утечка: среднее уже содержит таргет тестовой строки.</code></pre>
+
+<h2>A.5. Карта файлов проекта</h2>
+<table>
+  <thead><tr><th style="width:34%">Путь</th><th>Назначение</th></tr></thead>
+  <tbody>
+    <tr><td><span class="mono">notebooks/hypothesis_testing.ipynb</span></td><td>Этот ноутбук: подготовка, 21 гипотеза, сводка</td></tr>
+    <tr><td><span class="mono">notebooks/eda_salary.ipynb</span></td><td>Разведочный анализ, из которого выросли гипотезы</td></tr>
+    <tr><td><span class="mono">notebooks/salary_prediction.ipynb</span></td><td>Место для модели прогнозирования (пока пустой)</td></tr>
+    <tr><td><span class="mono">src/utils.py</span></td><td>Загрузка данных по пути относительно корня проекта</td></tr>
+    <tr><td><span class="mono">data/raw/job_postings_with_salaries.csv</span></td><td>Исходные данные</td></tr>
+    <tr><td><span class="mono">docs/hypothesis_testing_guide.pdf</span></td><td>Эта методичка</td></tr>
+  </tbody>
+</table>
+
+<h2>A.6. Что запомнить из всего документа</h2>
+<div class="box theory">
+  <span class="label">Пять мыслей</span>
+  <ol>
+    <li><b>Сначала данные, потом тесты.</b> Единицы, пропуски и выбросы решают больше, чем выбор теста.</li>
+    <li><b>p-value — не размер эффекта.</b> Всегда показывайте величину: медианы, проценты, ε², доллары.</li>
+    <li><b>Значимость ≠ польза для модели.</b> Проверяйте incremental value на общих фолдах.</li>
+    <li><b>Самый сильный признак может быть утечкой.</b> Спрашивайте, доступен ли он в момент прогноза.</li>
+    <li><b>Наблюдательные данные не доказывают причинность.</b> Пишите «связано», а не «влияет».</li>
+  </ol>
+</div>
+
+<div class="footer-note">
+  Методичка подготовлена по ноутбуку <span class="mono">notebooks/hypothesis_testing.ipynb</span> проекта «Job Postings with Salaries». Числа и выводы соответствуют версии ноутбука на дату подготовки; при изменении данных или библиотек результаты могут незначительно отличаться.
+</div>
+</div>
+
+</body>
+</html>
