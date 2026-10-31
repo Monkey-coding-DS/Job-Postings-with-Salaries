@@ -2,7 +2,9 @@
 
 Учебный исследовательский проект: анализ вакансий с зарплатными вилками и проверка гипотез о том, что связано с зарплатой.
 
-Главный артефакт — ноутбук [`notebooks/hypothesis_testing.ipynb`](notebooks/hypothesis_testing.ipynb): подготовка данных, 21 гипотеза, сравнение моделей и сводные выводы.
+Главный артефакт — исследовательский ноутбук [`notebooks/hypothesis_testing.ipynb`](notebooks/hypothesis_testing.ipynb): подготовка данных, 21 проверенная гипотеза, сравнение моделей и сводные выводы.
+
+Завершённая модель прогноза находится в [`notebooks/salary_prediction.ipynb`](notebooks/salary_prediction.ipynb): на данных, отобранных по результатам исследований, обучаются baseline, линейная регрессия, Random Forest и HistGradientBoosting, фиксируется лучшая модель.
 
 ## Документация
 
@@ -26,8 +28,8 @@ python -m venv venv
 venv\Scripts\activate          # Windows
 # source venv/bin/activate     # macOS / Linux
 
-pip install pandas numpy scipy scikit-learn statsmodels matplotlib seaborn jupyter
-jupyter notebook
+pip install -r requirements.txt
+jupyter lab
 ```
 
 Откройте `notebooks/hypothesis_testing.ipynb` и выполните **Kernel → Restart & Run All**.
@@ -38,42 +40,62 @@ jupyter notebook
 
 ```
 .
-├── data/raw/job_postings_with_salaries.csv   # исходные данные (~60 МБ)
+├── data/raw/job_postings_with_salaries.csv   # исходные данные (~60 МБ, не в репозитории)
 ├── notebooks/
 │   ├── eda_salary.ipynb                      # разведочный анализ
 │   ├── hypothesis_testing.ipynb              # 21 гипотеза (главный ноутбук)
-│   └── salary_prediction.ipynb               # место для модели прогноза
-├── src/utils.py                              # загрузка данных
+│   └── salary_prediction.ipynb               # финальная модель прогноза
+├── src/
+│   ├── utils.py                              # загрузка данных
+│   └── preprocessing.py                     # нормализация вилок, эвристики, признаки
+├── tests/
+│   └── test_preprocessing.py                # smoke-тесты модуля подготовки
 ├── docs/
 │   ├── hypothesis_testing_guide.pdf          # методичка
-│   └── hypothesis_testing_guide.html         # её HTML-версия
-└── README.md
+│   └── hypothesis_testing_guide.html        # её HTML-версия
+├── requirements.txt                          # зависимости проекта
+├── README.md
+└── .gitignore
 ```
 
 ## Что внутри ноутбука
 
 | Блок | Содержание |
 |---|---|
-| 0. Подготовка | Приведение периода и валюты к USD/год, `salary_mid`, `log_salary`, ширина вилки, флаги выбросов и пропусков, `job_family`, штат, даты |
-| Хелперы | `kruskal_table`, `pairwise_mw`, `cv_predict`, target encoding внутри фолдов, `metrics`, журнал `SUMMARY` |
+| 0. Подготовка | Единый модуль `src/preprocessing.py`: период и валюта → USD/год, `salary_mid`, `log_salary`, ширина вилки, флаги выбросов и пропусков, семейство профессии (`family_from_title`), штат, даты |
+| Хелперы | `kruskal_test`, `pairwise_tests`, `cv_oof`, `cv_with_target_encoding`, `cv_table`, `make_pipeline`, `metrics`, журнал выводов |
 | 1. Таргет | Логарифм зарплаты, середина вилки вместо min/max, ширина вилки как отдельный сигнал |
 | 2. Роль | Seniority, восстановление уровня из `title`, семейство профессии, `department` |
 | 3. География | Страна, формат работы (remote/hybrid/onsite), штат США, пропуск `country_code` |
 | 4. Компания | ATS как прокси типа компании, target encoding компании, `salary_source` как артефакт сбора |
 | 5. Занятость | Тип занятости, исходный период оплаты, ошибки нормализации периода |
 | 6. Текст | TF-IDF + Ridge по описанию, проверка на утечку денежных сумм, индикаторы пропусков |
-| 7. Служебное | `salary_min` → `salary_max`, даты публикации |
+| 7. Служебные | `salary_min` → `salary_max`, даты публикации |
 | 8–9. Итоги | Сводная таблица, рекомендации по признакам, ограничения, следующие шаги |
 
 ## Ключевые результаты
 
 - **14 гипотез подтверждены** полностью или с оговоркой, **6 — частично**, **1 — не подтверждена**.
-- Логарифм таргета убирает скошенность (skew 3,56 → −0,08) и снижает RMSLE с 0,738 до 0,451.
+- Логарифм таргета убирает скошенность (skew 3,56 → −0,08) и снижает RMSLE с 0,534 до 0,452.
 - Сильнее всего модели помогают: исходный период оплаты (+6,6k MAE), target encoding компании (+2,7k), семейство профессии (+2,2k), ATS и `department` (по +1,1k), штат США (+0,9k).
 - Разница за удалённую работу после контроля на состав выборки составляет около +6 % вместо сырых +45 %.
 - `description` — самый сильный источник сигнала, но 87 % описаний содержат явные суммы; после маскировки денежных паттернов качество остаётся высоким (MAE 27,7k против 40,6k у метаданных).
 - `salary_min` почти идеально предсказывает `salary_max` (R² 0,92), но это утечка, а не полезный признак для холодного прогноза.
 - Даты бесполезны: все вакансии собраны за одну неделю, а «час публикации» — артефакт Workday.
+
+## Модели прогноза (salary_prediction.ipynb)
+
+На проверенных признаках собирается финальная модель. Все модели оцениваются на одной тестовой выборке (20 % от данных с указанной зарплатой) и сравниваются по MAE в лог-шкале и в USD.
+
+| Модель | MAE (log) | MAE (USD) | MAPE |
+|---|---|---|---|
+| Baseline (median) | 0,502 | — | — |
+| Linear Regression (log-таргет) | **0,298** | **34,9k** | 31,8% |
+| Linear Regression (USD-таргет) | — | 38,4k | 41,9% |
+| Random Forest | 0,327 | — | — |
+| HistGradientBoosting | 0,331 | — | — |
+
+Лучшая модель на тестовой выборке — **Linear Regression** на логарифмическом таргете (`salary_mid`): MAE 0,298 в лог-шкале, что соответствует средней ошибке около 34,9k USD.
 
 ## Методические принципы
 
@@ -93,4 +115,6 @@ jupyter notebook
 
 ## Требования
 
-Python 3.13 (проверено), `pandas`, `numpy`, `scipy`, `scikit-learn`, `statsmodels`, `matplotlib`, `seaborn`, `jupyter`. GPU и доступ к сети не нужны.
+Python 3.13, зависимости — в [`requirements.txt`](requirements.txt) (`pandas`, `numpy`, `scipy`, `scikit-learn`, `statsmodels`, `matplotlib`, `seaborn`, `jupyter`).
+
+GPU и доступ к сети не нужны.

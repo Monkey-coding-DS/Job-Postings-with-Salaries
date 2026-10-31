@@ -465,7 +465,7 @@
 
 <h2 id="s2-2">2.2. Целевая переменная и её особенности</h2>
 
-<p>Целевая переменная — <b>середина вилки</b> <span class="mono">salary_mid = (salary_min_usd + salary_max_usd) / 2</span>, приведённая к долларам в год. Слово «приведённая» здесь ключевое: исходные суммы могут быть почасовыми, недельными или в евро, и сравнивать их напрямую нельзя.</p>
+<p>Целевая переменная — <b>середина вилки</b> <span class="mono">salary_mid = (salary_min + salary_max) / 2</span>, приведённая к долларам в год. Слово «приведённая» здесь ключевое: исходные суммы могут быть почасовыми, недельными или в евро, и сравнивать их напрямую нельзя.</p>
 
 <p>Распределение зарплат сильно скошено вправо: большинство вакансий — 50–150 тысяч, но есть хвост до сотен тысяч. Среднее в таком распределении уезжает за «типичным» значением, поэтому в описательной статистике используется медиана, а в модели — логарифм.</p>
 
@@ -772,7 +772,7 @@ df = raw.dropna(subset=["salary_min", "salary_max"]).copy().reset_index(drop=Tru
 <pre><code>PERIOD_COEF = {"day": 260, "week": 52, "month": 12, "hour": 2080, "year": 1}
 CURRENCY_COEF = {"USD": 1.0, "EUR": 0.89, "CAD": 1.42, "GBP": 0.75, ...}
 
-df["salary_min_usd"] = (
+df["salary_min"] = (
     df["salary_min"] * df["raw_period"].map(PERIOD_COEF) / df["raw_currency"].map(CURRENCY_COEF)
 )</code></pre>
 <p>Логика: сначала сумму умножают на коэффициент периода (сколько таких периодов в году), затем делят на курс валюты к доллару. Например, 50 долларов в час → 50 × 2 080 = 104 000 долларов в год; 60 000 евро → 60 000 / 0,89 ≈ 67 416 долларов.</p>
@@ -783,11 +783,11 @@ df["salary_min_usd"] = (
 </div>
 
 <h2>5.3. Таргет и производные величины</h2>
-<pre><code>df["salary_mid"] = (df["salary_min_usd"] + df["salary_max_usd"]) / 2
+<pre><code>df["salary_mid"] = (df["salary_min"] + df["salary_max"]) / 2
 df["log_salary"] = np.log1p(df["salary_mid"])
-df["spread"] = df["salary_max_usd"] - df["salary_min_usd"]
-df["spread_pct"] = df["spread"] / df["salary_mid"]</code></pre>
-<p><span class="mono">salary_mid</span> — таргет; <span class="mono">log_salary</span> — тот же таргет в лог-шкале, на нём обучается большинство моделей; <span class="mono">spread</span> — абсолютная ширина вилки, <span class="mono">spread_pct</span> — относительная. Последние две нужны для гипотезы 3.</p>
+df["spread"] = df["salary_max"] - df["salary_min"]
+df["spread_rel"] = df["spread"] / df["salary_mid"]</code></pre>
+<p><span class="mono">salary_mid</span> — таргет; <span class="mono">log_salary</span> — тот же таргет в лог-шкале, на нём обучается большинство моделей; <span class="mono">spread</span> — абсолютная ширина вилки, <span class="mono">spread_rel</span> — относительная. Последние две нужны для гипотезы 3.</p>
 
 <div class="box why">
   <span class="label">Почему так</span>
@@ -800,13 +800,13 @@ df["spread_pct"] = df["spread"] / df["salary_mid"]</code></pre>
     iqr = q3 - q1
     return q1 - 1.5 * iqr, q3 + 1.5 * iqr
 
-for col in ["salary_min_usd", "salary_max_usd"]:
+for col in ["salary_min", "salary_max"]:
     low, high = iqr_bounds(df[col])
     df[f"outlier_{col}"] = (df[col] &lt; low) | (df[col] &gt; high)
 
-df["outlier_any"] = df["outlier_salary_min_usd"] | df["outlier_salary_max_usd"]
-df["period_suspect"] = df["outlier_any"] &amp; df["raw_period"].ne("year")</code></pre>
-<p>Флаг <span class="mono">period_suspect</span> объединяет два условия: сумма выглядит выбросом <i>и</i> период не годовой. Гипотеза: возможно, годовая сумма была ошибочно записана как почасовая или наоборот. Такие строки не удаляются, а помечаются — их влияние проверяется в гипотезе 17.</p>
+df["outlier_any"] = iqr_outlier(df["salary_min"]) | iqr_outlier(df["salary_max"])
+df["suspicious_period"] = df["outlier_any"] &amp; df["raw_period"].ne("year")</code></pre>
+<p>Флаг <span class="mono">suspicious_period</span> объединяет два условия: сумма выглядит выбросом <i>и</i> период не годовой. Гипотеза: возможно, годовая сумма была ошибочно записана как почасовая или наоборот. Такие строки не удаляются, а помечаются — их влияние проверяется в гипотезе 17.</p>
 
 <h2>5.5. Индикаторы пропусков</h2>
 <pre><code>MISSING_FIELDS = ["seniority", "workplace_type", "country_code", "language",
@@ -832,13 +832,13 @@ for col in BASE:
     "sales": r"\bsales\b|account executive|...",
     ...
 }
-def job_family(title):
+def family(title):
     text = str(title).lower()
     for family, pattern in FAMILY_PATTERNS.items():
         if re.search(pattern, text):
             return family
     return "other"
-df["job_family"] = df["title"].map(job_family)</code></pre>
+df["family"] = df["title"].map(family)</code></pre>
 <p>Это правило-эвристика: если в названии встретилось слово из шаблона, вакансия относится к семейству. Порядок словаря важен: первое совпадение выигрывает. Например, «Data Engineer» попадёт в engineering.</p>
 
 <div class="box warn">
@@ -852,7 +852,7 @@ df["job_family"] = df["title"].map(job_family)</code></pre>
     ...  # поиск полного названия штата, затем двухбуквенного кода
     return None
 
-df["state_model"] = np.where(df["country_code"].eq("US"), df["state"].fillna("Unknown"), "Unknown")</code></pre>
+df["us_state"] = np.where(df["country_code"].eq("US"), df["state"].fillna("Unknown"), "Unknown")</code></pre>
 <p>Штат извлекается только для США, потому что для других стран такая детализация либо отсутствует, либо несопоставима. Полные названия («California») переводятся в коды («CA»), затем коды ищутся в тексте. Покрытие — около 82 % американских вакансий.</p>
 
 <h2>5.9. Даты</h2>
@@ -975,7 +975,7 @@ df["days_since_start"] = (df["posted"] - df["posted"].min()).dt.total_seconds() 
         fitted = fit_hgb(X.iloc[train_idx], y.iloc[train_idx])
         pred[test_idx] = predict_hgb(fitted, X.iloc[test_idx])
     return pred</code></pre>
-<p>Параметр <span class="mono">extra</span> позволяет добавить признак к базовому набору, не переписывая цикл. Именно так проверяется вклад <span class="mono">job_family</span>, <span class="mono">seniority_pred</span>, дат и флагов пропусков.</p>
+<p>Параметр <span class="mono">extra</span> позволяет добавить признак к базовому набору, не переписывая цикл. Именно так проверяется вклад <span class="mono">family</span>, <span class="mono">seniority_title</span>, дат и флагов пропусков.</p>
 
 <h2>6.7. Target encoding без утечки</h2>
 <pre><code>def cv_predict_target_encoding(X, y, column, folds=FOLDS):
@@ -1038,7 +1038,7 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <dd>Сначала описательно: коэффициент асимметрии (skew), тест Jarque–Bera на нормальность, QQ-графики. Затем одна и та же модель (<span class="mono">HistGradientBoosting</span>) обучалась дважды — на исходной зарплате и на логарифме — на одних и тех же 5 фолдах. Метрики пересчитывались в доллары через <span class="mono">expm1</span>.</dd>
 
 <dt>Что получилось</dt>
-<dd>Skew падает с 3,56 до −0,08, то есть распределение становится почти симметричным. RMSLE улучшается с 0,738 до 0,451. MAE тоже немного снижается. При этом R² на исходной шкале у лог-модели чуть ниже: 0,279 против 0,302.</dd>
+<dd>Skew падает с 3,56 до −0,08, то есть распределение становится почти симметричным. RMSLE улучшается с 0,534 до 0,452. MAE тоже немного снижается. При этом R² на исходной шкале у лог-модели чуть ниже: 0,279 против 0,302.</dd>
 
 <dt>Как понимать</dt>
 <dd>Логарифм сжимает правый хвост и превращает процентные различия в равные шаги. Модель перестаёт «гоняться» за дорогими вакансиями и лучше предсказывает типичные. Jarque–Bera формально отвергает нормальность в обоих случаях (на 9 000 наблюдений любой тест это сделает), но skew и QQ-plot показывают, что лог-шкала гораздо ближе к симметрии.</dd>
@@ -1056,7 +1056,7 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <dd>Можно ли ограничиться одним числом на вакансию, если вилка состоит из двух границ?</dd>
 
 <dt>Как проверяли</dt>
-<dd>Посчитали корреляцию Пирсона и Спирмена между <span class="mono">salary_min_usd</span> и <span class="mono">salary_max_usd</span>. Затем обучили три одинаковые модели — на логарифме min, середины и max — и сравнили MAE, RMSLE и R².</dd>
+<dd>Посчитали корреляцию Пирсона и Спирмена между <span class="mono">salary_min</span> и <span class="mono">salary_max</span>. Затем обучили три одинаковые модели — на логарифме min, середины и max — и сравнили MAE, RMSLE и R².</dd>
 
 <dt>Что получилось</dt>
 <dd>Pearson 0,944; Spearman 0,958 — границы почти коллинеарны. Модели для min, mid и max дают близкие ошибки, а R² у середины максимален (0,474).</dd>
@@ -1077,7 +1077,7 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <dd>Несёт ли <span class="mono">spread</span> информацию сверх уровня зарплаты, и можно ли её предсказать?</dd>
 
 <dt>Как проверяли</dt>
-<dd>Spearman между абсолютной/относительной шириной и зарплатой; Kruskal–Wallis по периодам, уровням и типу занятости; две модели — на <span class="mono">spread_pct</span> и на <span class="mono">log1p(spread)</span> — с той же кросс-валидацией.</dd>
+<dd>Spearman между абсолютной/относительной шириной и зарплатой; Kruskal–Wallis по периодам, уровням и типу занятости; две модели — на <span class="mono">spread_rel</span> и на <span class="mono">log1p(spread)</span> — с той же кросс-валидацией.</dd>
 
 <dt>Что получилось</dt>
 <dd>Абсолютная ширина сильно растёт с зарплатой: ρ = 0,75. Относительная — слабее: ρ = 0,24. Предсказуемость относительной ширины низкая: R² = 0,08. Различия по периоду и типу занятости статистически значимы.</dd>
@@ -1139,16 +1139,16 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <h3><span class="num">6</span> Семейство профессии значимо</h3>
 <dl>
 <dt>Вопрос</dt>
-<dd>Различаются ли зарплаты между группами профессий, и помогает ли <span class="mono">job_family</span> модели?</dd>
+<dd>Различаются ли зарплаты между группами профессий, и помогает ли <span class="mono">family</span> модели?</dd>
 
 <dt>Как проверяли</dt>
-<dd>Kruskal–Wallis по <span class="mono">job_family</span> (группы от 50 наблюдений), боксплоты в лог-шкале, затем добавление признака в базовую модель и сравнение MAE на общих фолдах.</dd>
+<dd>Kruskal–Wallis по <span class="mono">family</span> (группы от 50 наблюдений), боксплоты в лог-шкале, затем добавление признака в базовую модель и сравнение MAE на общих фолдах.</dd>
 
 <dt>Что получилось</dt>
 <dd>ε² = 0,17 — большой эффект. Медианы: legal, design и engineering около 150k и выше; admin, education, customer — ниже 70k. Прирост MAE около 2,2k. При этом 34 % вакансий попали в <span class="mono">other</span>.</dd>
 
 <dt>Как понимать</dt>
-<dd>Профессия — сильный и содержательный признак. Но <span class="mono">job_family</span> — грубая эвристика по названию: она не различает грейды внутри семьи и теряет треть вакансий. Для исследовательского вывода этого достаточно, для продукта — нет.</dd>
+<dd>Профессия — сильный и содержательный признак. Но <span class="mono">family</span> — грубая эвристика по названию: она не различает грейды внутри семьи и теряет треть вакансий. Для исследовательского вывода этого достаточно, для продукта — нет.</dd>
 
 <dt>Чему учит</dt>
 <dd>Признак, собранный регуляркой, может дать реальный прирост — но качество эвристики надо измерять (доля <span class="mono">other</span>, ручная проверка примеров). Если категория «другое» слишком большая, модель теряет информацию.</dd>
@@ -1380,7 +1380,7 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <dd>Что делать со строками, где сумма выглядит выбросом, а период не годовой?</dd>
 
 <dt>Как проверяли</dt>
-<dd>Определили 42 подозрительные строки. Сравнили три варианта обучения: (A) на всех строках, (B) без подозрительных, (C) на всех плюс флаг <span class="mono">period_suspect</span>. Оценка — MAE на чистых тестовых строках и отдельно на подозрительных.</dd>
+<dd>Определили 42 подозрительные строки. Сравнили три варианта обучения: (A) на всех строках, (B) без подозрительных, (C) на всех плюс флаг <span class="mono">suspicious_period</span>. Оценка — MAE на чистых тестовых строках и отдельно на подозрительных.</dd>
 
 <dt>Что получилось</dt>
 <dd>Подозрительных строк 0,5 %, но средняя зарплата у них 631k против 114k, а ошибка модели — около 500k. Исключение из обучения улучшает MAE на чистых данных всего на ~0,3k (0,8 %); флаг даёт примерно тот же эффект.</dd>
@@ -1389,7 +1389,7 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <dd>Даже грубая ошибка в 0,5 % строк почти не двигает среднюю метрику, потому что её вклад мал. Но если смотреть на этих клиентов отдельно, ошибка катастрофическая. Поэтому чистка важна локально, а не как способ улучшить общий MAE.</dd>
 
 <dt>Чему учит</dt>
-<dd>Оценивайте модель не только по среднему: смотрите на хвосты и подгруппы. И помните, что флаг <span class="mono">period_suspect</span> построен по <span class="mono">salary_min/max</span> — в «холодном» прогнозе, где зарплата неизвестна, его не будет. Это диагностический признак, а не продакшн-фича.</dd>
+<dd>Оценивайте модель не только по среднему: смотрите на хвосты и подгруппы. И помните, что флаг <span class="mono">suspicious_period</span> построен по <span class="mono">salary_min/max</span> — в «холодном» прогнозе, где зарплата неизвестна, его не будет. Это диагностический признак, а не продакшн-фича.</dd>
 </dl>
 <span class="verdict v-part">Частично подтверждена</span>
 </div>
@@ -1447,7 +1447,7 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <dd>Насколько хорошо нижняя граница вилки предсказывает верхнюю?</dd>
 
 <dt>Как проверяли</dt>
-<dd>Две модели на лог-шкале: без <span class="mono">salary_min_usd</span> и с ним. Плюс permutation importance на hold-out.</dd>
+<dd>Две модели на лог-шкале: без <span class="mono">salary_min</span> и с ним. Плюс permutation importance на hold-out.</dd>
 
 <dt>Что получилось</dt>
 <dd>MAE падает с 47,2k до 17,4k; R² растёт с 0,47 до 0,92. Важность <span class="mono">salary_min</span> более чем в 10 раз выше остальных признаков.</dd>
@@ -1531,8 +1531,8 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
   <tbody>
     <tr><td>Исходный <span class="mono">salary_period</span></td><td>+6,6k</td><td>Самый сильный категориальный признак, но это формат оплаты и тип роли</td></tr>
     <tr><td>Target encoding компании</td><td>+2,7k</td><td>Требует аккуратной кросс-валидации и сглаживания</td></tr>
-    <tr><td><span class="mono">job_family</span></td><td>+2,2k</td><td>Эвристика по title; 34 % в «other»</td></tr>
-    <tr><td><span class="mono">seniority_pred</span> поверх <span class="mono">job_family</span></td><td>+3,1k</td><td>37,7k → 34,6k; есть тонкая утечка при обучении классификатора</td></tr>
+    <tr><td><span class="mono">family</span></td><td>+2,2k</td><td>Эвристика по title; 34 % в «other»</td></tr>
+    <tr><td><span class="mono">seniority_title</span> поверх <span class="mono">family</span></td><td>+3,1k</td><td>37,7k → 34,6k; есть тонкая утечка при обучении классификатора</td></tr>
     <tr><td><span class="mono">ats</span></td><td>+1,1k</td><td>Прокси типа компании, не причина</td></tr>
     <tr><td><span class="mono">department</span></td><td>+1,1k</td><td>Только на подвыборке с заполненным полем</td></tr>
     <tr><td>Штат США</td><td>+0,9k</td><td>Покрытие 82 % американских вакансий</td></tr>
@@ -1546,11 +1546,11 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <h2>8.3. Рекомендуемый набор признаков</h2>
 <p>Для «холодного» прогноза, когда зарплата вакансии неизвестна:</p>
 <ul>
-  <li><span class="mono">raw_period</span>, <span class="mono">ats</span>, <span class="mono">country_code</span>, <span class="mono">state_model</span>, <span class="mono">employment_type</span>, <span class="mono">workplace_type</span>;</li>
-  <li><span class="mono">job_family</span>, <span class="mono">seniority_pred</span>, <span class="mono">dept_group</span>;</li>
+  <li><span class="mono">raw_period</span>, <span class="mono">ats</span>, <span class="mono">country_code</span>, <span class="mono">us_state</span>, <span class="mono">employment_type</span>, <span class="mono">workplace_type</span>;</li>
+  <li><span class="mono">family</span>, <span class="mono">seniority_title</span>, <span class="mono">department_group</span>;</li>
   <li>target encoding <span class="mono">company</span> / <span class="mono">company_id</span> — только внутри train-фолдов;</li>
   <li>очищенный от денежных упоминаний текст описания (TF-IDF или эмбеддинги);</li>
-  <li>флаг <span class="mono">period_suspect</span> — только для диагностики.</li>
+  <li>флаг <span class="mono">suspicious_period</span> — только для диагностики.</li>
 </ul>
 <p>Не включать в холодный прогноз <span class="mono">salary_min</span> и <span class="mono">salary_max</span>: они дают «идеальные» метрики, но это утечка. Их место — восстановление интервалов, когда одна из границ уже известна.</p>
 
@@ -1567,7 +1567,7 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <h2>8.5. Что делать дальше</h2>
 <ol>
   <li>Собрать более длинную историю и проверить сезонность/тренды на временном hold-out.</li>
-  <li>Заменить эвристики <span class="mono">job_family</span> и <span class="mono">seniority</span> на обучаемые модели по title/description.</li>
+  <li>Заменить эвристики <span class="mono">family</span> и <span class="mono">seniority</span> на обучаемые модели по title/description.</li>
   <li>Добавить эмбеддинги описания и попробовать градиентный бустинг поверх них.</li>
   <li>Перейти от точечного прогноза к квантильной регрессии — для вилки и интервалов.</li>
   <li>Отдельно моделировать почасовые и part-time вакансии: у них другой механизм формирования зарплаты.</li>
@@ -1722,7 +1722,7 @@ BASE_METRICS = metrics(BASE_PRED, df.salary_mid)</code></pre>
 <table>
   <thead><tr><th style="width:26%">Величина</th><th>Формула / правило</th></tr></thead>
   <tbody>
-    <tr><td>Середина вилки</td><td><span class="mono">(salary_min_usd + salary_max_usd) / 2</span></td></tr>
+    <tr><td>Середина вилки</td><td><span class="mono">(salary_min + salary_max) / 2</span></td></tr>
     <tr><td>Приведение к году</td><td><span class="mono">сумма × коэффициент_периода / курс_валюты</span></td></tr>
     <tr><td>Логарифм таргета</td><td><span class="mono">log1p(x) = ln(1 + x)</span>; обратно <span class="mono">expm1(z) = e^z − 1</span></td></tr>
     <tr><td>Границы Тьюки</td><td><span class="mono">Q1 − 1,5·IQR</span> и <span class="mono">Q3 + 1,5·IQR</span>, где <span class="mono">IQR = Q3 − Q1</span></td></tr>
@@ -1764,13 +1764,13 @@ mae_with = mean_absolute_error(df.salary_mid, np.expm1(pred_with))
 print(f"MAE без/с признаком: {BASE_METRICS['MAE, $']:,} / {mae_with:,.0f}")</code></pre>
 
 <h2>A.3. Шаблон Kruskal–Wallis</h2>
-<pre><code>res = kruskal_table(df, "salary_mid", "job_family", min_n=50)
+<pre><code>res = kruskal_table(df, "salary_mid", "family", min_n=50)
 print(f"H = {res['H']:.1f}, p = {pfmt(res['p'])}, eps2 = {res['eps2']:.2f}")
 display(res["table"])
 
 # Пост-хок: только для заранее выбранных пар, с поправкой
 pairs = [("engineering", "sales"), ("engineering", "admin")]
-display(pairwise_mw(df, "salary_mid", "job_family", pairs).round(3))</code></pre>
+display(pairwise_mw(df, "salary_mid", "family", pairs).round(3))</code></pre>
 
 <h2>A.4. Шаблон target encoding</h2>
 <pre><code># Внутри каждого фолда: fit только на train, transform на test
@@ -1786,8 +1786,9 @@ pred = cv_predict_target_encoding(df[BASE], df.log_salary, "company")
   <tbody>
     <tr><td><span class="mono">notebooks/hypothesis_testing.ipynb</span></td><td>Этот ноутбук: подготовка, 21 гипотеза, сводка</td></tr>
     <tr><td><span class="mono">notebooks/eda_salary.ipynb</span></td><td>Разведочный анализ, из которого выросли гипотезы</td></tr>
-    <tr><td><span class="mono">notebooks/salary_prediction.ipynb</span></td><td>Место для модели прогнозирования (пока пустой)</td></tr>
+    <tr><td><span class="mono">notebooks/salary_prediction.ipynb</span></td><td>Завершённая модель прогноза: baseline, линейная регрессия, Random Forest, HistGradientBoosting</td></tr>
     <tr><td><span class="mono">src/utils.py</span></td><td>Загрузка данных по пути относительно корня проекта</td></tr>
+    <tr><td><span class="mono">src/preprocessing.py</span></td><td>Нормализация вилок к USD/год, эвристики восстановления признаков, признаки</td></tr>
     <tr><td><span class="mono">data/raw/job_postings_with_salaries.csv</span></td><td>Исходные данные</td></tr>
     <tr><td><span class="mono">docs/hypothesis_testing_guide.pdf</span></td><td>Эта методичка</td></tr>
   </tbody>
