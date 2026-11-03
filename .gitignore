@@ -9,4 +9,3 @@ build/
 dist/
 .pytest_cache/
 .pyidea/
-.vscode/
